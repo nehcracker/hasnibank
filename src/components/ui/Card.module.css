@@ -1,0 +1,8 @@
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  transition: border-color var(--transition-base);
+}
+.card:hover { border-color: rgba(203, 161, 53, 0.3); }

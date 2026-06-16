@@ -1,0 +1,30 @@
+.heading { margin-bottom: var(--space-12); }
+.center  { text-align: center; }
+.left    { text-align: left; }
+
+.label {
+  display: inline-block;
+  color: var(--color-gold);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  color: var(--color-ivory);
+  margin-bottom: var(--space-4);
+}
+@media (min-width: 768px) {
+  .title { font-size: var(--text-5xl); }
+}
+
+.subtitle {
+  font-size: var(--text-lg);
+  color: var(--color-muted);
+  max-width: 640px;
+}
+.center .subtitle { margin: 0 auto; }
