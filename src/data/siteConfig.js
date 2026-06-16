@@ -1,6 +1,7 @@
 export const siteConfig = {
   name: 'Hasni Bank',
   tagline: 'Global Financing Solutions',
+  siteUrl: 'https://hasnibank.com',
   contact: {
     email: 'financing@hasnibank.com',
   },

@@ -1,4 +1,6 @@
-const BASE = 'https://hasnibank.com'
+import { siteConfig } from '@/data/siteConfig'
+
+const BASE = siteConfig.siteUrl
 
 export const organizationData = {
   '@context': 'https://schema.org',

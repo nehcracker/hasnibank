@@ -19,7 +19,10 @@ export function useIntersection(threshold = 0.15) {
     )
 
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      observer.unobserve(el)
+      observer.disconnect()
+    }
   }, [threshold])
 
   return { ref, isVisible }

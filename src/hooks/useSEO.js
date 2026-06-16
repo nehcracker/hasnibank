@@ -19,6 +19,10 @@ export function useSEO({ title, description, keywords, canonical, structuredData
         document.head.appendChild(script)
       })
     }
+
+    return () => {
+      document.querySelectorAll('script[data-sd]').forEach(el => el.remove())
+    }
   }, [title, description, keywords, canonical, structuredData])
 }
 
