@@ -5,7 +5,7 @@
   transition: background-color var(--transition-base), box-shadow var(--transition-base);
 }
 .scrolled {
-  background-color: rgba(11, 18, 32, 0.95);
+  background-color: rgba(var(--color-navy-rgb) / 0.95);
   backdrop-filter: blur(8px);
   box-shadow: 0 1px 0 var(--color-border);
 }
@@ -73,7 +73,7 @@
   display: flex;
   flex-direction: column;
   padding: var(--space-4) var(--space-6) var(--space-6);
-  background-color: rgba(11, 18, 32, 0.98);
+  background-color: rgba(var(--color-navy-rgb) / 0.98);
   border-top: 1px solid var(--color-border);
 }
 .mobileLink {
@@ -97,6 +97,11 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   border-radius: var(--radius-sm);
+}
+
+.hamburger:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
 }
 
 @media (max-width: 768px) {

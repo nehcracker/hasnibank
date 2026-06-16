@@ -6,7 +6,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Navbar />
-      <main style={{ paddingTop: '72px' }}>
+      <main style={{ paddingTop: 'var(--navbar-height)' }}>
         <Routes>
           <Route path="/"                element={<div />} />
           <Route path="/sme-finance"     element={<div />} />

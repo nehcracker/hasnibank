@@ -50,4 +50,11 @@
   /* Layout */
   --max-width-xl: 1280px;
   --section-padding-y: var(--space-20);
+
+  /* RGB component tokens (for alpha variants) */
+  --color-gold-rgb: 203 161 53;
+  --color-navy-rgb: 11 18 32;
+
+  /* Component dimensions */
+  --navbar-height: 72px;
 }

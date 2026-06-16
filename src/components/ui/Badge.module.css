@@ -1,7 +1,7 @@
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-3);
-  background-color: rgba(203, 161, 53, 0.12);
+  background-color: rgba(var(--color-gold-rgb) / 0.12);
   color: var(--color-gold);
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -9,5 +9,5 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(203, 161, 53, 0.25);
+  border: 1px solid rgba(var(--color-gold-rgb) / 0.25);
 }
