@@ -54,6 +54,7 @@
   /* RGB component tokens (for alpha variants) */
   --color-gold-rgb: 203 161 53;
   --color-navy-rgb: 11 18 32;
+  --color-ivory-rgb: 244 241 232;
 
   /* Component dimensions */
   --navbar-height: 72px;

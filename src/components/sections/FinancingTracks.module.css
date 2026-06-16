@@ -1,0 +1,33 @@
+.section {
+  padding: var(--section-padding-y) 0;
+  background-color: var(--color-surface);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  background-color: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+.card:hover { border-color: var(--color-gold); transform: translateY(-2px); }
+
+.badge { align-self: flex-start; }
+
+.title { font-size: var(--text-2xl); font-weight: 600; color: var(--color-ivory); }
+
+.description { font-size: var(--text-base); color: var(--color-muted); line-height: 1.7; flex: 1; }
+
+.arrow { color: var(--color-gold); font-size: var(--text-lg); transition: transform var(--transition-fast); }
+.card:hover .arrow { transform: translateX(4px); }

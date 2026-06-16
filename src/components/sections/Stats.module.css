@@ -1,0 +1,22 @@
+.section { padding: var(--section-padding-y) 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-8);
+}
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+
+.stat { text-align: center; }
+
+.value {
+  font-family: var(--font-heading);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  color: var(--color-gold);
+  line-height: 1;
+  margin-bottom: var(--space-3);
+}
+
+.label { font-size: var(--text-sm); color: var(--color-muted); letter-spacing: 0.05em; text-transform: uppercase; }
