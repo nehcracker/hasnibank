@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#0B1220"/>
-  <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-        font-family="serif" font-size="18" fill="#CBA135">H</text>
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0B1220"/>
+  <!-- Left pillar -->
+  <rect x="3" y="3" width="7" height="26" rx="1.5" fill="#CBA135"/>
+  <!-- Right pillar -->
+  <rect x="22" y="3" width="7" height="26" rx="1.5" fill="#CBA135"/>
+  <!-- Crossbar -->
+  <rect x="3" y="13.5" width="26" height="5" fill="#CBA135"/>
+  <!-- Diamond window -->
+  <path d="M16 11.5L19.5 16L16 20.5L12.5 16Z" fill="#0B1220"/>
+  <!-- Centre dot -->
+  <circle cx="16" cy="16" r="1" fill="#CBA135"/>
 </svg>

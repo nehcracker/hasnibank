@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 44" fill="none">
+  <!-- H-Gate mark -->
+  <rect x="4" y="4" width="10" height="36" rx="2" fill="#CBA135"/>
+  <rect x="30" y="4" width="10" height="36" rx="2" fill="#CBA135"/>
+  <rect x="4" y="19" width="36" height="6" fill="#CBA135"/>
+  <path d="M22 16.5L26.5 22L22 27.5L17.5 22Z" fill="#0B1220"/>
+  <circle cx="22" cy="22" r="1.5" fill="#CBA135"/>
+  <!-- Wordmark -->
+  <text x="54" y="17" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#F4F1E8" letter-spacing="0.12em">HASNI</text>
+  <text x="54" y="33" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="300" fill="#CBA135" letter-spacing="0.25em">BANK</text>
+</svg>

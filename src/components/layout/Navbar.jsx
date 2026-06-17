@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
 import { navLinks } from '@/data/navData'
+import logoSrc from '@/assets/Logo.png'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
@@ -18,7 +19,9 @@ export default function Navbar() {
   return (
     <header className={`${styles.header} ${scrollY > 20 ? styles.scrolled : ''}`}>
       <div className={styles.inner}>
-        <Link to="/" className={styles.logo}>Hasni Bank</Link>
+        <Link to="/" className={styles.logo} aria-label="Hasni Bank — Home">
+          <img src={logoSrc} alt="Hasni Bank" className={styles.logoImg} />
+        </Link>
 
         <nav className={styles.nav}>
           {navLinks.map(link => (

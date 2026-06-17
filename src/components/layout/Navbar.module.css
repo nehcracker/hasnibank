@@ -20,12 +20,15 @@
 }
 
 .logo {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--color-ivory);
-  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+}
+
+.logoImg {
+  height: 40px;
+  width: auto;
+  display: block;
 }
 
 .nav { display: flex; gap: var(--space-6); margin-left: auto; }
