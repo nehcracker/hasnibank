@@ -7,7 +7,7 @@ export const organizationData = {
   '@type': 'Organization',
   name: 'Hasni Bank',
   url: BASE,
-  logo: `${BASE}/favicon.svg`,
+  logo: `${BASE}/android-chrome-512x512.png`,
   description: 'Global financing marketplace connecting SMEs and project sponsors with international capital.',
   contactPoint: {
     '@type': 'ContactPoint',
@@ -29,7 +29,7 @@ export const serviceData = [
     '@type': 'Service',
     name: 'SME Financing',
     provider: { '@type': 'Organization', name: 'Hasni Bank' },
-    description: 'Working capital, equipment finance, and expansion loans for small and medium enterprises.',
+    description: 'Working capital, equipment finance, and expansion funding for small and medium enterprises.',
     url: `${BASE}/sme-finance`,
   },
   {

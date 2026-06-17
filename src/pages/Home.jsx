@@ -10,11 +10,10 @@ import FunderStrip from '@/components/sections/FunderStrip'
 import FaqTeaser from '@/components/sections/FaqTeaser'
 import CtaBand from '@/components/sections/CtaBand'
 
+const homeStructuredData = [organizationData, websiteData, getFAQStructuredData(siteConfig.faq)]
+
 export default function Home() {
-  useSEO({
-    ...seoConfig.home,
-    structuredData: [organizationData, websiteData, getFAQStructuredData(siteConfig.faq)],
-  })
+  useSEO({ ...seoConfig.home, structuredData: homeStructuredData })
 
   return (
     <>

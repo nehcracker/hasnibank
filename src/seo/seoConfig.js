@@ -11,7 +11,7 @@ export const seoConfig = {
   },
   smeFinance: {
     title: 'SME Finance — Working Capital & Business Funding | Hasni Bank',
-    description: 'Access working capital, equipment finance, business expansion funding, and trade finance through our global funder network.',
+    description: 'Access working capital, equipment finance, expansion funding, and trade finance matched to lenders who understand your sector.',
     keywords: 'SME financing, business funding, working capital, equipment finance, trade finance solutions',
     canonical: `${BASE}/sme-finance`,
   },
@@ -23,7 +23,7 @@ export const seoConfig = {
   },
   howItWorks: {
     title: 'How It Works — Our Financing Process | Hasni Bank',
-    description: 'A four-step process: submit your requirement, assessment, funder matching, and completion.',
+    description: 'A transparent four-step process: submit your requirement, assessment and due diligence, funder matching, and completion.',
     keywords: 'how it works, financing process, apply for funding, funder matching',
     canonical: `${BASE}/how-it-works`,
   },
@@ -35,19 +35,19 @@ export const seoConfig = {
   },
   team: {
     title: 'Our Team — Hasni Bank',
-    description: 'Meet the experienced financing professionals behind Hasni Bank.',
-    keywords: 'Hasni Bank team, financing professionals',
+    description: 'Meet the experienced financing professionals behind Hasni Bank — decades of expertise in international finance, structured credit, and capital markets.',
+    keywords: 'Hasni Bank team, financing professionals, international finance experts',
     canonical: `${BASE}/team`,
   },
   insights: {
     title: 'Insights — Finance & Capital Markets | Hasni Bank',
-    description: 'Expert analysis, guides, and updates on SME growth, international finance, project development, and trade finance.',
+    description: 'Expert analysis, guides, and updates on SME growth, international finance, project development, capital raising, and trade finance.',
     keywords: 'finance insights, capital markets, SME growth strategies, trade finance updates',
     canonical: `${BASE}/insights`,
   },
   contact: {
     title: 'Apply for Financing — Hasni Bank',
-    description: 'Submit your financing requirement and our team will assess your needs and connect you with the right funders.',
+    description: 'Submit your financing requirement and our team will assess your needs and connect you with the right funders from our global network.',
     keywords: 'apply for financing, contact Hasni Bank, funding application',
     canonical: `${BASE}/contact`,
   },
