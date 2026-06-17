@@ -10,9 +10,9 @@ export const seoConfig = {
     canonical: `${BASE}/`,
   },
   smeFinance: {
-    title: 'SME Finance — Working Capital & Business Loans | Hasni Bank',
-    description: 'Access working capital, equipment finance, business expansion loans, and trade finance through our global funder network.',
-    keywords: 'SME financing, business loans, working capital, equipment finance, trade finance solutions',
+    title: 'SME Finance — Working Capital & Business Funding | Hasni Bank',
+    description: 'Access working capital, equipment finance, business expansion funding, and trade finance through our global funder network.',
+    keywords: 'SME financing, business funding, working capital, equipment finance, trade finance solutions',
     canonical: `${BASE}/sme-finance`,
   },
   projectFunding: {
