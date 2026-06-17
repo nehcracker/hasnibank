@@ -18,7 +18,7 @@
   gap: var(--space-4);
   transition: border-color var(--transition-base);
 }
-.card:hover { border-color: rgba(var(--color-gold-rgb), 0.3); }
+.card:hover { border-color: rgba(var(--color-gold-rgb) / 0.3); }
 
 .icon { font-size: var(--text-3xl); color: var(--color-gold); }
 .title { font-size: var(--text-xl); font-weight: 600; color: var(--color-ivory); }

@@ -119,8 +119,9 @@ export default function Contact() {
               <div className={styles.row}>
                 <Field label="Funding Requirement (e.g. $2M working capital)" name="fundingRequirement" value={form.fundingRequirement} onChange={handleChange} error={errors.fundingRequirement} />
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label}>Financing Type</label>
+                  <label htmlFor="financingType" className={styles.label}>Financing Type</label>
                   <select
+                    id="financingType"
                     name="financingType"
                     value={form.financingType}
                     onChange={handleChange}
@@ -133,8 +134,9 @@ export default function Contact() {
                 </div>
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Project / Business Description</label>
+                <label htmlFor="projectDescription" className={styles.label}>Project / Business Description</label>
                 <textarea
+                  id="projectDescription"
                   name="projectDescription"
                   value={form.projectDescription}
                   onChange={handleChange}
@@ -161,8 +163,9 @@ export default function Contact() {
 function Field({ label, name, type = 'text', value, onChange, error }) {
   return (
     <div className={styles.fieldGroup}>
-      <label className={styles.label}>{label}</label>
+      <label htmlFor={name} className={styles.label}>{label}</label>
       <input
+        id={name}
         type={type}
         name={name}
         value={value}

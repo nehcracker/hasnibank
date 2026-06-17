@@ -1,18 +1,12 @@
 import { useSEO } from '@/hooks/useSEO'
 import { seoConfig } from '@/seo/seoConfig'
 import { organizationData } from '@/seo/structuredData'
+import { coreValues } from '@/data/siteConfig'
 import Hero from '@/components/sections/Hero'
 import CtaBand from '@/components/sections/CtaBand'
 import Container from '@/components/ui/Container'
 import SectionHeading from '@/components/ui/SectionHeading'
 import styles from './About.module.css'
-
-const values = [
-  { title: 'Integrity',          body: 'We operate with transparency and honesty in every client and funder relationship. Our reputation is built on trust.' },
-  { title: 'Excellence',         body: 'We bring institutional rigour to every mandate — from initial assessment through to completion.' },
-  { title: 'Global Perspective', body: 'Our team and network span continents. We understand the nuances of cross-border financing and local market dynamics.' },
-  { title: 'Partnership',        body: 'We are not a transaction machine. We work alongside clients as long-term financing partners invested in their success.' },
-]
 
 export default function About() {
   useSEO({ ...seoConfig.about, structuredData: organizationData })
@@ -54,7 +48,7 @@ export default function About() {
         <Container>
           <SectionHeading label="Values" title="What Guides Us" />
           <div className={styles.valuesGrid}>
-            {values.map(v => (
+            {coreValues.map(v => (
               <div key={v.title} className={styles.valueCard}>
                 <h3 className={styles.valueTitle}>{v.title}</h3>
                 <p className={styles.valueBody}>{v.body}</p>

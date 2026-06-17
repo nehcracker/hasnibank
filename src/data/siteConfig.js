@@ -1,3 +1,25 @@
+export const howItWorksMechanics = [
+  {
+    title: 'Marketplace Matching',
+    body: 'Unlike a single lender, Hasni Bank operates as a marketplace. Your requirement is presented to multiple funders simultaneously, generating competitive term sheets and ensuring you receive the most appropriate financing structure.',
+  },
+  {
+    title: 'Sector Expertise',
+    body: 'Our financing team brings deep experience across SME lending, infrastructure debt, energy equity, and structured finance. We translate your requirement into the language funders respond to.',
+  },
+  {
+    title: 'Global Reach',
+    body: 'Our network spans commercial banks, development finance institutions, private credit funds, and family offices across Europe, the Gulf, Asia-Pacific, and Sub-Saharan Africa.',
+  },
+]
+
+export const coreValues = [
+  { title: 'Integrity',          body: 'We operate with transparency and honesty in every client and funder relationship. Our reputation is built on trust.' },
+  { title: 'Excellence',         body: 'We bring institutional rigour to every mandate — from initial assessment through to completion.' },
+  { title: 'Global Perspective', body: 'Our team and network span continents. We understand the nuances of cross-border financing and local market dynamics.' },
+  { title: 'Partnership',        body: 'We are not a transaction machine. We work alongside clients as long-term financing partners invested in their success.' },
+]
+
 export const howItWorksSteps = [
   {
     number: '01',
