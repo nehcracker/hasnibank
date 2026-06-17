@@ -1,0 +1,27 @@
+.services { padding: var(--section-padding-y) 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+.serviceCard { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.icon {
+  font-size: var(--text-3xl);
+  color: var(--color-gold);
+}
+
+.serviceTitle {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-ivory);
+}
+
+.serviceDesc {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  line-height: 1.7;
+}

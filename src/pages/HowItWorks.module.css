@@ -1,0 +1,29 @@
+.mechanics {
+  padding: var(--section-padding-y) 0;
+  background-color: var(--color-surface);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+}
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+.mechCard {
+  border-left: 2px solid var(--color-gold);
+  padding-left: var(--space-6);
+}
+
+.mechTitle {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-ivory);
+  margin-bottom: var(--space-3);
+}
+
+.mechBody {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  line-height: 1.7;
+}

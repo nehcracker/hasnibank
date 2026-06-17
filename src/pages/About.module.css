@@ -1,0 +1,33 @@
+.section { padding: var(--section-padding-y) 0; }
+.altBg { background-color: var(--color-surface); }
+
+.missionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+}
+@media (max-width: 768px) { .missionGrid { grid-template-columns: 1fr; gap: var(--space-12); } }
+
+.body { font-size: var(--text-lg); color: var(--color-muted); line-height: 1.8; }
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+}
+@media (max-width: 768px) { .valuesGrid { grid-template-columns: 1fr; } }
+
+.valueCard {
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.valueTitle {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-gold);
+  margin-bottom: var(--space-3);
+}
+
+.valueBody { font-size: var(--text-base); color: var(--color-muted); line-height: 1.7; }
