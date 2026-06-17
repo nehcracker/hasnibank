@@ -14,8 +14,8 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    rgb(var(--color-navy-rgb) / 0.82),
-    rgb(var(--color-navy-rgb) / 0.94)
+    rgb(var(--color-navy-rgb) / 0.86),
+    rgb(var(--color-navy-rgb) / 0.96)
   );
   pointer-events: none;
 }
