@@ -26,7 +26,7 @@ function StatItem({ value, suffix = '', prefix = '', label }) {
     }, duration / steps)
 
     return () => clearInterval(timer)
-  }, [isVisible, value, isDecimal])
+  }, [isVisible, value])
 
   return (
     <div ref={ref} className={styles.stat}>

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import Container from '@/components/ui/Container'
 import Button from '@/components/ui/Button'
 import styles from './Hero.module.css'
@@ -20,9 +19,7 @@ export default function Hero({ imageKey = 'home', badge, heading, subheading, pr
   return (
     <section
       className={styles.hero}
-      style={{
-        backgroundImage: `linear-gradient(rgba(var(--color-navy-rgb) / 0.72), rgba(var(--color-navy-rgb) / 0.88)), url(${img})`,
-      }}
+      style={{ backgroundImage: `url(${img})` }}
     >
       <Container>
         <div className={styles.content}>

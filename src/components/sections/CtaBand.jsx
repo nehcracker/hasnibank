@@ -18,7 +18,7 @@ export default function CtaBand({
           </div>
           <div className={styles.actions}>
             <Button href={primaryCta.href} variant="primary">{primaryCta.label}</Button>
-            <Button href={secondaryCta.href} variant="outline">{secondaryCta.label}</Button>
+            {secondaryCta && <Button href={secondaryCta.href} variant="outline">{secondaryCta.label}</Button>}
           </div>
         </div>
       </Container>

@@ -1,3 +1,26 @@
+export const howItWorksSteps = [
+  {
+    number: '01',
+    title: 'Submit Your Application',
+    description: 'Complete our structured financing application with your project details and funding requirements.',
+  },
+  {
+    number: '02',
+    title: 'Assessment & Due Diligence',
+    description: 'Our team evaluates your application against our network\'s investment criteria.',
+  },
+  {
+    number: '03',
+    title: 'Funder Matching',
+    description: 'We connect your project with the most suitable funders from our global network.',
+  },
+  {
+    number: '04',
+    title: 'Completion',
+    description: 'Finalise terms with your matched funder and proceed to drawdown.',
+  },
+]
+
 export const siteConfig = {
   name: 'Hasni Bank',
   tagline: 'Global Financing Solutions',
