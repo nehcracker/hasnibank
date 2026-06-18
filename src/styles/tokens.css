@@ -8,6 +8,8 @@
   --color-muted: #9FA9BD;
   --color-border: #2A3654;
   --color-success: #3FA37A;
+  --color-error: #e57373;
+  --color-error-rgb: 229 115 115;
 
   /* Typography */
   --font-heading: 'Fraunces', Georgia, serif;
