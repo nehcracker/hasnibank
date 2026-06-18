@@ -6,7 +6,6 @@
 }
 .scrolled {
   background-color: rgba(var(--color-navy-rgb) / 0.95);
-  backdrop-filter: blur(8px);
   box-shadow: 0 1px 0 var(--color-border);
 }
 
