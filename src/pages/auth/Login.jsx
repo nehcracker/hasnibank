@@ -19,6 +19,7 @@ export default function Login() {
 
     if (error) {
       if (error.message.toLowerCase().includes('not confirmed')) {
+        sessionStorage.setItem('signup_email', email)
         navigate('/verify-email')
       } else if (
         error.message.toLowerCase().includes('invalid') ||

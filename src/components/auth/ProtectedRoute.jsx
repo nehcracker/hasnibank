@@ -8,8 +8,8 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   if (!session) return <Navigate to="/login" replace />
 
-  if (requiredRole === 'staff' && role !== 'staff') return <Navigate to="/dashboard" replace />
-  if (requiredRole === 'borrower' && role !== 'borrower') return <Navigate to="/admin" replace />
+  if (requiredRole === 'staff' && role !== null && role !== 'staff') return <Navigate to="/dashboard" replace />
+  if (requiredRole === 'borrower' && role !== null && role !== 'borrower') return <Navigate to="/admin" replace />
 
   return children
 }
