@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 import { navLinks } from '@/data/navData'
 import logoSrc from '@/assets/Logo.png'
 import styles from './Navbar.module.css'
@@ -8,6 +10,8 @@ import styles from './Navbar.module.css'
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const scrollY = useScrollPosition()
+  const { user, loading } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!open) return
@@ -15,6 +19,11 @@ export default function Navbar() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    navigate('/', { replace: true })
+  }
 
   return (
     <header className={`${styles.header} ${scrollY > 20 ? styles.scrolled : ''}`}>
@@ -35,7 +44,21 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <Link to="/contact" className={styles.cta}>Get Started</Link>
+        {!loading && (
+          <div className={styles.authArea}>
+            {user ? (
+              <>
+                <span className={styles.userEmail}>{user.email}</span>
+                <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className={styles.loginLink}>Log in</Link>
+                <Link to="/contact" className={styles.cta}>Get Started</Link>
+              </>
+            )}
+          </div>
+        )}
 
         <button
           className={styles.hamburger}
@@ -60,9 +83,25 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
-          <Link to="/contact" className={styles.mobileCta} onClick={() => setOpen(false)}>
-            Get Started
-          </Link>
+          {!loading && (
+            user ? (
+              <button
+                className={styles.mobileCta}
+                onClick={() => { setOpen(false); handleSignOut() }}
+              >
+                Sign out
+              </button>
+            ) : (
+              <>
+                <Link to="/login" className={styles.mobileLink} onClick={() => setOpen(false)}>
+                  Log in
+                </Link>
+                <Link to="/contact" className={styles.mobileCta} onClick={() => setOpen(false)}>
+                  Get Started
+                </Link>
+              </>
+            )
+          )}
         </nav>
       )}
     </header>
