@@ -6,6 +6,7 @@ import SmeFields from './steps/SmeFields'
 import ProjectFields from './steps/ProjectFields'
 import TradeFields from './steps/TradeFields'
 import AcquisitionFields from './steps/AcquisitionFields'
+import ReviewSubmit from './steps/ReviewSubmit'
 import styles from './Wizard.module.css'
 
 const STEPS = ['Track', 'Details', 'Review']
@@ -108,7 +109,10 @@ export default function ApplicationWizard({ onComplete }) {
         )}
 
         {step === 3 && (
-          <ReviewPlaceholder
+          <ReviewSubmit
+            track={track}
+            fields={fields}
+            onEditTrack={() => handleGoToStep(1)}
             onBack={handleBack}
             onSubmit={handleSubmit}
             submitting={submitting}
@@ -139,22 +143,6 @@ function ProgressBar({ currentStep }) {
           </div>
         )
       })}
-    </div>
-  )
-}
-
-function ReviewPlaceholder({ onBack, onSubmit, submitting, submitError }) {
-  return (
-    <div>
-      <h2 className={styles.sectionTitle}>Review & Submit</h2>
-      <p className={styles.sectionSub}>Review placeholder — coming in Task 5</p>
-      <div className={styles.navRow}>
-        <button className={styles.backBtn} onClick={onBack}>Back</button>
-        <button className={styles.submitBtn} onClick={onSubmit} disabled={submitting}>
-          {submitting ? 'Submitting…' : 'Submit Application'}
-        </button>
-      </div>
-      {submitError && <p className={styles.submitError}>{submitError}</p>}
     </div>
   )
 }
