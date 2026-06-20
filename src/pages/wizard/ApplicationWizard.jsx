@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import TrackSelect from './steps/TrackSelect'
+import SmeFields from './steps/SmeFields'
+import ProjectFields from './steps/ProjectFields'
+import TradeFields from './steps/TradeFields'
+import AcquisitionFields from './steps/AcquisitionFields'
 import styles from './Wizard.module.css'
 
 const STEPS = ['Track', 'Details', 'Review']
@@ -90,8 +94,17 @@ export default function ApplicationWizard({ onComplete }) {
           </>
         )}
 
-        {step === 2 && (
-          <DetailsPlaceholder track={track} onBack={handleBack} onNext={handleNext} />
+        {step === 2 && track === 'sme' && (
+          <SmeFields fields={fields} onChange={handleFieldChange} onBack={handleBack} onNext={handleNext} />
+        )}
+        {step === 2 && track === 'project' && (
+          <ProjectFields fields={fields} onChange={handleFieldChange} onBack={handleBack} onNext={handleNext} />
+        )}
+        {step === 2 && track === 'trade' && (
+          <TradeFields fields={fields} onChange={handleFieldChange} onBack={handleBack} onNext={handleNext} />
+        )}
+        {step === 2 && track === 'acquisition' && (
+          <AcquisitionFields fields={fields} onChange={handleFieldChange} onBack={handleBack} onNext={handleNext} />
         )}
 
         {step === 3 && (
@@ -126,21 +139,6 @@ function ProgressBar({ currentStep }) {
           </div>
         )
       })}
-    </div>
-  )
-}
-
-function DetailsPlaceholder({ track, onBack, onNext }) {
-  return (
-    <div>
-      <h2 className={styles.sectionTitle}>Application Details</h2>
-      <p className={styles.sectionSub}>
-        {track ? `${track.toUpperCase()} fields — coming in Task 4` : 'No track selected'}
-      </p>
-      <div className={styles.navRow}>
-        <button className={styles.backBtn} onClick={onBack}>Back</button>
-        <button className={styles.nextBtn} onClick={onNext}>Next</button>
-      </div>
     </div>
   )
 }
