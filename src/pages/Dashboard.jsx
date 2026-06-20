@@ -16,7 +16,12 @@ export default function Dashboard() {
       .select('*')
       .eq('applicant_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('applications query failed:', error)
+          setWizardState('idle')
+          return
+        }
         if (data) {
           setApplication(data)
           setWizardState('submitted')
