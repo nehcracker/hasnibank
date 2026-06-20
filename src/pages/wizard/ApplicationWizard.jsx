@@ -75,6 +75,7 @@ export default function ApplicationWizard({ onComplete }) {
       setSubmitting(false)
       return
     }
+    setSubmitting(false)
     onComplete(data)
   }
 
