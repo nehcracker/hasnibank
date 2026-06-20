@@ -57,23 +57,3 @@
 .startBtn:hover {
   background: var(--color-gold-soft);
 }
-
-.signOut {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-4);
-  background: transparent;
-  color: var(--color-muted);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  margin-top: var(--space-8);
-}
-
-.signOut:hover {
-  color: var(--color-gold);
-  border-color: var(--color-gold);
-}
