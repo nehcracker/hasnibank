@@ -17,6 +17,7 @@ import VerifyEmail from '@/pages/auth/VerifyEmail'
 import SignupProfile from '@/pages/auth/SignupProfile'
 import Dashboard from '@/pages/Dashboard'
 import Admin from '@/pages/Admin'
+import AdminApplication from '@/pages/admin/AdminApplication'
 
 export default function App() {
   return (
@@ -44,6 +45,9 @@ export default function App() {
             } />
             <Route path="/admin"           element={
               <ProtectedRoute requiredRole="staff"><Admin /></ProtectedRoute>
+            } />
+            <Route path="/admin/applications/:id" element={
+              <ProtectedRoute requiredRole="staff"><AdminApplication /></ProtectedRoute>
             } />
           </Routes>
         </main>
