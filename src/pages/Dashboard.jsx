@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import ApplicationWizard from './wizard/ApplicationWizard'
+import ApplicationStatus from './dashboard/ApplicationStatus'
 import styles from './Dashboard.module.css'
 
 export default function Dashboard() {
@@ -51,22 +52,7 @@ export default function Dashboard() {
   }
 
   if (wizardState === 'submitted') {
-    return (
-      <div className={styles.page}>
-        <div className={styles.inner}>
-          <h1 className={styles.heading}>Application Submitted</h1>
-          <p className={styles.body}>
-            Thank you{profile?.full_name ? `, ${profile.full_name}` : ''}. Your financing application
-            has been received. Our team will review it and be in touch with next steps.
-          </p>
-          <p className={styles.meta}>
-            Track: <strong>{TRACK_LABELS[application?.track]}</strong>
-            &nbsp;·&nbsp;
-            Amount sought: <strong>USD {Number(application?.amount_sought).toLocaleString('en-US')}</strong>
-          </p>
-        </div>
-      </div>
-    )
+    return <ApplicationStatus application={application} />
   }
 
   return (
@@ -85,11 +71,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}
-
-const TRACK_LABELS = {
-  sme: 'SME Financing',
-  project: 'Project Funding',
-  trade: 'Trade Finance',
-  acquisition: 'Acquisition Finance',
 }

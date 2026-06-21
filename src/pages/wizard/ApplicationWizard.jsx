@@ -75,6 +75,15 @@ export default function ApplicationWizard({ onComplete }) {
       setSubmitting(false)
       return
     }
+
+    await supabase.from('application_events').insert({
+      application_id: data.id,
+      actor_id: user.id,
+      actor_role: 'borrower',
+      event_type: 'status_change',
+      payload: { new_status: 'submitted' },
+    })
+
     setSubmitting(false)
     onComplete(data)
   }

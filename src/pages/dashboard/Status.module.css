@@ -188,3 +188,36 @@
   color: var(--color-muted);
   font-style: italic;
 }
+
+/* ── ApplicationStatus page ───────────────────────────── */
+.statusPage {
+  min-height: 100vh;
+  background: var(--color-navy);
+  padding: var(--space-8) var(--space-4);
+}
+
+.statusInner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.statusHeading {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-2);
+}
+
+.statusMeta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin: 0 0 var(--space-6);
+}
+
+.statusMeta strong { color: var(--color-gold-soft); }
+
+.loadingMsg {
+  font-family: var(--font-body);
+  color: var(--color-muted);
+}
