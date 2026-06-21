@@ -19,6 +19,7 @@ export default function Admin() {
   const navigate = useNavigate()
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     supabase
@@ -26,7 +27,11 @@ export default function Admin() {
       .select('*, applicant:profiles!applicant_id(full_name, email)')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
-        if (!error) setApplications(data ?? [])
+        if (error) {
+          setError('Failed to load applications. Please refresh.')
+        } else {
+          setApplications(data ?? [])
+        }
         setLoading(false)
       })
   }, [])
@@ -45,6 +50,7 @@ export default function Admin() {
     <div className={styles.page}>
       <div className={styles.inner}>
         <h1 className={styles.heading}>Applications</h1>
+        {error && <p className={styles.errorMsg}>{error}</p>}
         <table className={styles.table}>
           <thead>
             <tr>

@@ -40,13 +40,20 @@ export default function StageControl({ applicationId, currentStatus, userId, onU
     const payload = { new_status: selected }
     if (note.trim()) payload.note = note.trim()
 
-    await supabase.from('application_events').insert({
+    const { error: eventError } = await supabase.from('application_events').insert({
       application_id: applicationId,
       actor_id: userId,
       actor_role: 'staff',
       event_type: 'status_change',
       payload,
     })
+
+    if (eventError) {
+      console.error('Event insert failed:', eventError)
+      setError('Status updated, but the audit trail entry failed. Please refresh.')
+      setUpdating(false)
+      return
+    }
 
     setNote('')
     setSuccess(true)

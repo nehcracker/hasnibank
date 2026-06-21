@@ -49,12 +49,14 @@ export default function ApplicationStatus({ application: initial }) {
         event_type: 'status_change',
         payload: { new_status: 'offer_accepted' },
       }
-      await supabase.from('application_events').insert(newEvent)
+      const { error: eventError } = await supabase.from('application_events').insert(newEvent)
       setApplication(updated)
-      setEvents((prev) => [
-        ...prev,
-        { ...newEvent, id: crypto.randomUUID(), created_at: new Date().toISOString() },
-      ])
+      if (!eventError) {
+        setEvents((prev) => [
+          ...prev,
+          { ...newEvent, id: crypto.randomUUID(), created_at: new Date().toISOString() },
+        ])
+      }
     }
     setAccepting(false)
   }
