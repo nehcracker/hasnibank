@@ -71,7 +71,7 @@ export default function ApplicationWizard({ onComplete }) {
       .single()
 
     if (error) {
-      setSubmitError(error.message)
+      setSubmitError('Something went wrong — please try again or contact support.')
       setSubmitting(false)
       return
     }
