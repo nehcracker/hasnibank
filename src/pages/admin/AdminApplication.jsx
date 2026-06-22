@@ -35,7 +35,7 @@ export default function AdminApplication() {
   useEffect(() => {
     supabase
       .from('applications')
-      .select('*, applicant:profiles!applicant_id(full_name, email)')
+      .select('*, applicant:profiles!applicant_id(full_name)')
       .eq('id', id)
       .single()
       .then(({ data, error }) => {
@@ -81,10 +81,7 @@ export default function AdminApplication() {
                 <span className={styles.fieldLabel}>Name</span>
                 <span className={styles.fieldValue}>{applicant?.full_name ?? '—'}</span>
               </div>
-              <div className={styles.fieldRow}>
-                <span className={styles.fieldLabel}>Email</span>
-                <span className={styles.fieldValue}>{applicant?.email ?? '—'}</span>
-              </div>
+
             </div>
 
             <div className={styles.section}>

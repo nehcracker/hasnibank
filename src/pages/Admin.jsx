@@ -24,7 +24,7 @@ export default function Admin() {
   useEffect(() => {
     supabase
       .from('applications')
-      .select('*, applicant:profiles!applicant_id(full_name, email)')
+      .select('*, applicant:profiles!applicant_id(full_name)')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) {
@@ -80,7 +80,6 @@ export default function Admin() {
                 >
                   <td>
                     <div>{app.applicant?.full_name ?? '—'}</div>
-                    <div className={styles.muted}>{app.applicant?.email}</div>
                   </td>
                   <td>{TRACK_LABELS[app.track] ?? app.track}</td>
                   <td>{app.currency} {Number(app.amount_sought).toLocaleString('en-US')}</td>
