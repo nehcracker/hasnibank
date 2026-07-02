@@ -20,10 +20,21 @@ create trigger set_client_ref
   for each row execute function public.assign_client_ref();
 
 -- Backfill existing profiles, oldest first so numbering respects tenure
-update public.profiles p
-set client_ref = 'HB-' || to_char(p.created_at, 'YYYY') || '-' ||
-                 lpad(nextval('public.client_ref_seq')::text, 5, '0')
-where p.client_ref is null;
+do $$
+declare
+  r record;
+begin
+  for r in
+    select id, created_at from public.profiles
+    where client_ref is null
+    order by created_at asc
+  loop
+    update public.profiles
+    set client_ref = 'HB-' || to_char(r.created_at, 'YYYY') || '-' ||
+                     lpad(nextval('public.client_ref_seq')::text, 5, '0')
+    where id = r.id;
+  end loop;
+end $$;
 
 -- 2. Structured offer terms, set by staff when issuing an offer
 alter table public.applications
