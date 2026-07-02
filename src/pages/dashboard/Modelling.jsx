@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useApplication } from '@/hooks/useApplication'
 import Estimator from './modelling/Estimator'
+import ActualSchedule from './modelling/ActualSchedule'
+import DscrCalculator from './modelling/DscrCalculator'
+import ScenarioCompare from './modelling/ScenarioCompare'
 import styles from './modelling/Modelling.module.css'
 
 // ---------------------------------------------------------------------------
-// Default scenario terms
+// Constants
 // ---------------------------------------------------------------------------
 
 const DEFAULT_TERMS = {
@@ -17,10 +20,6 @@ const DEFAULT_TERMS = {
   balloonPct: 30,
 }
 
-// ---------------------------------------------------------------------------
-// Tab definitions
-// ---------------------------------------------------------------------------
-
 const TABS = [
   { id: 'estimator', label: 'Estimator' },
   { id: 'actual', label: 'Actual schedule' },
@@ -28,11 +27,8 @@ const TABS = [
   { id: 'compare', label: 'Compare' },
 ]
 
-const PLACEHOLDERS = {
-  actual: 'Your repayment schedule appears here once an offer is issued.',
-  dscr: 'DSCR calculator arrives with the next update.',
-  compare: 'Scenario comparison arrives with the next update.',
-}
+/** Scenario slot names — max 3 in-memory scenarios. */
+const SCENARIO_NAMES = ['A', 'B', 'C']
 
 // ---------------------------------------------------------------------------
 // Modelling page
@@ -42,7 +38,7 @@ export default function Modelling() {
   const { application } = useApplication()
   const [activeTab, setActiveTab] = useState('estimator')
 
-  // Terms state is lifted here so future tabs (e.g. DSCR) can consume the same scenario.
+  // Terms state is lifted here so sibling tabs (DSCR, Compare) can consume the same scenario.
   const [terms, setTerms] = useState(() => ({
     ...DEFAULT_TERMS,
     // Prefill amount from application when available.
@@ -52,9 +48,19 @@ export default function Modelling() {
         : DEFAULT_TERMS.amount,
   }))
 
+  // In-memory scenario snapshots (max 3, named A / B / C).
+  const [scenarios, setScenarios] = useState([])
+
   // Patch-based updater — only override the keys that changed.
   function handleTermsChange(patch) {
     setTerms(prev => ({ ...prev, ...patch }))
+  }
+
+  // Snapshot the current terms as the next available scenario slot.
+  function saveScenario() {
+    if (scenarios.length >= 3) return
+    const name = SCENARIO_NAMES[scenarios.length]
+    setScenarios(prev => [...prev, { name, terms: { ...terms } }])
   }
 
   // Once application loads (or changes), sync amount_sought into terms.
@@ -63,6 +69,8 @@ export default function Modelling() {
       setTerms(prev => ({ ...prev, amount: Number(application.amount_sought) }))
     }
   }, [application?.amount_sought])
+
+  const canSave = scenarios.length < 3
 
   return (
     <div className={styles.page}>
@@ -87,13 +95,49 @@ export default function Modelling() {
         ))}
       </div>
 
-      {/* ── Tab content ── */}
+      {/* ── Estimator tab ── */}
       {activeTab === 'estimator' && (
-        <Estimator terms={terms} onTermsChange={handleTermsChange} />
+        <>
+          <div className={styles.saveScenarioBar}>
+            <button
+              className={`${styles.saveScenarioBtn}${!canSave ? ` ${styles.saveScenarioBtnDisabled}` : ''}`}
+              onClick={saveScenario}
+              disabled={!canSave}
+              title={
+                !canSave ? 'All three scenario slots (A, B, C) are in use' : undefined
+              }
+            >
+              {canSave
+                ? `Save as scenario ${SCENARIO_NAMES[scenarios.length]}`
+                : 'Scenarios full (A / B / C saved)'}
+            </button>
+            {scenarios.length > 0 && (
+              <span className={styles.saveScenarioCount}>
+                {scenarios.map(s => s.name).join(', ')} saved
+              </span>
+            )}
+          </div>
+          <Estimator terms={terms} onTermsChange={handleTermsChange} />
+        </>
       )}
 
-      {activeTab !== 'estimator' && (
-        <p className={styles.placeholder}>{PLACEHOLDERS[activeTab]}</p>
+      {/* ── Actual schedule tab ── */}
+      {activeTab === 'actual' && (
+        <ActualSchedule
+          application={application}
+          onGoToEstimator={() => setActiveTab('estimator')}
+        />
+      )}
+
+      {/* ── DSCR calculator tab ── */}
+      {activeTab === 'dscr' && <DscrCalculator terms={terms} />}
+
+      {/* ── Scenario compare tab ── */}
+      {activeTab === 'compare' && (
+        <ScenarioCompare
+          scenarios={scenarios}
+          onGoToEstimator={() => setActiveTab('estimator')}
+        />
       )}
     </div>
   )

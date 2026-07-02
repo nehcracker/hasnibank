@@ -1,7 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styles from './Modelling.module.css'
-
-const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 const PREVIEW_ROWS = 12
 
@@ -11,9 +9,16 @@ const PREVIEW_ROWS = 12
  * Renders a period-by-period amortisation schedule with a "Show all" expander.
  * First 12 rows are always visible; remaining rows toggle on demand.
  *
- * @param {{ schedule: Array<{ period: number, payment: number, interest: number, principal: number, balance: number }> }} props
+ * @param {{
+ *   schedule: Array<{ period: number, payment: number, interest: number, principal: number, balance: number }>,
+ *   currency?: string,
+ * }} props
  */
-export default function ScheduleTable({ schedule }) {
+export default function ScheduleTable({ schedule, currency = 'USD' }) {
+  const fmt = useMemo(
+    () => new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    [currency]
+  )
   const [expanded, setExpanded] = useState(false)
 
   if (!schedule || schedule.length === 0) return null
