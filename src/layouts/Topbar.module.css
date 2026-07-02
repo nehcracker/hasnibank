@@ -1,0 +1,199 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  height: var(--topbar-height);
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+}
+
+/* ── Hamburger (mobile only) ─────────────────────── */
+.menuBtn {
+  display: none;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-ivory);
+  transition: background var(--transition-fast);
+}
+
+.menuBtn:hover {
+  background: rgba(var(--color-ivory-rgb), 0.08);
+}
+
+.menuIcon {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+@media (max-width: 720px) {
+  .menuBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ── Brand mark ──────────────────────────────────── */
+.brand {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-gold);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+/* ── Centre slot (ClientIdBadge) ─────────────────── */
+.centre {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Right cluster ────────────────────────────────── */
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* ── Notification bell placeholder ───────────────── */
+.notifSlot {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  /* Task 8 fills this */
+}
+
+/* ── Profile menu ────────────────────────────────── */
+.profileMenu {
+  position: relative;
+}
+
+.profileToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.profileToggle:hover {
+  border-color: var(--color-gold);
+  background: rgba(var(--color-gold-rgb), 0.06);
+}
+
+.profileName {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ivory);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileCompany {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileChevron {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.profileChevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* ── Profile dropdown ────────────────────────────── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 200px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) 0;
+  box-shadow: 0 8px 32px rgba(var(--color-navy-rgb), 0.6);
+  z-index: 300;
+}
+
+.dropdownInfo {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-2);
+}
+
+.dropdownName {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ivory);
+}
+
+.dropdownCompany {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.dropdownSignOut {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.dropdownSignOut:hover {
+  background: rgba(var(--color-error-rgb), 0.1);
+  color: var(--color-error);
+}
+
+/* Collapse profile text on small screens */
+@media (max-width: 480px) {
+  .profileName,
+  .profileCompany {
+    display: none;
+  }
+
+  .centre {
+    display: none;
+  }
+}

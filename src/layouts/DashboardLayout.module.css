@@ -1,0 +1,99 @@
+/* Dashboard shell — CSS grid: topbar (full-width) + sidebar + main */
+
+:root {
+  --topbar-height: 64px;
+  --sidebar-width: 224px;
+  --sidebar-collapsed: 64px;
+}
+
+.shell {
+  display: grid;
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main";
+  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100vh;
+  background: var(--color-navy);
+}
+
+/* ── Topbar ──────────────────────────────────────── */
+.topbarArea {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+.sidebarArea {
+  grid-area: sidebar;
+  position: sticky;
+  top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  transition: width var(--transition-base);
+}
+
+/* ── Main content ────────────────────────────────── */
+.mainArea {
+  grid-area: main;
+  min-height: calc(100vh - var(--topbar-height));
+  overflow-y: auto;
+  background: var(--color-navy);
+  padding: var(--space-8);
+}
+
+/* ── Overlay (mobile drawer backdrop) ─────────────── */
+.overlay {
+  display: none;
+}
+
+/* ── ≤ 1024px: collapse sidebar to 64px icon rail ── */
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: var(--sidebar-collapsed) 1fr;
+  }
+}
+
+/* ── ≤ 720px: off-canvas drawer ──────────────────── */
+@media (max-width: 720px) {
+  .shell {
+    grid-template-areas:
+      "topbar"
+      "main";
+    grid-template-columns: 1fr;
+  }
+
+  .sidebarArea {
+    grid-area: unset;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+
+  .sidebarArea.drawerOpen {
+    transform: translateX(0);
+  }
+
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(var(--color-navy-rgb), 0.75);
+    z-index: 199;
+    cursor: pointer;
+    border: none;
+    appearance: none;
+  }
+}
