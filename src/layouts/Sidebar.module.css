@@ -41,7 +41,7 @@
 
 /* Applied by NavLink when route matches */
 .navLink.active {
-  background: var(--color-navy);
+  background: var(--color-surface);
   color: var(--color-gold-soft);
 }
 
