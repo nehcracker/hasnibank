@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useApplication } from '@/hooks/useApplication'
 import Estimator from './modelling/Estimator'
 import styles from './modelling/Modelling.module.css'
@@ -57,15 +57,12 @@ export default function Modelling() {
     setTerms(prev => ({ ...prev, ...patch }))
   }
 
-  // Once application loads, set the amount if not yet overridden by the user.
-  // We track whether the user has touched the amount with a ref-free approach:
-  // simply keep the prefill logic in useState initialiser above (runs once).
-  // If the application loads after mount, we update once here.
-  const [prefilled, setPrefilled] = useState(false)
-  if (!prefilled && application?.amount_sought != null) {
-    setPrefilled(true)
-    setTerms(prev => ({ ...prev, amount: Number(application.amount_sought) }))
-  }
+  // Once application loads (or changes), sync amount_sought into terms.
+  useEffect(() => {
+    if (application?.amount_sought != null) {
+      setTerms(prev => ({ ...prev, amount: Number(application.amount_sought) }))
+    }
+  }, [application?.amount_sought])
 
   return (
     <div className={styles.page}>

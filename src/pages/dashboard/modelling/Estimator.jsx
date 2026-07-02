@@ -353,7 +353,7 @@ export default function Estimator({ terms, onTermsChange }) {
                   formatter={(v, name) => [fmtCurrency.format(v), name]}
                   contentStyle={tooltipStyle}
                   labelStyle={{ color: c.muted }}
-                  cursor={{ fill: 'rgba(203,161,53,0.06)' }}
+                  cursor={{ fill: c.gold, fillOpacity: 0.06 }}
                 />
                 <Legend
                   wrapperStyle={{ fontFamily: 'var(--font-body)', fontSize: 12, color: c.muted }}
@@ -367,7 +367,7 @@ export default function Estimator({ terms, onTermsChange }) {
       )}
 
       {/* ── Schedule table ── */}
-      <ScheduleTable schedule={schedule} />
+      <ScheduleTable key={schedule.length} schedule={schedule} />
     </div>
   )
 }
