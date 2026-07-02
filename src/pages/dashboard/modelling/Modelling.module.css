@@ -265,7 +265,7 @@
   text-align: right;
   padding: var(--space-3) var(--space-5);
   color: var(--color-ivory);
-  border-bottom: 1px solid rgba(var(--color-border-rgb), 0.5);
+  border-bottom: 1px solid rgba(var(--color-border-rgb) / 0.5);
 }
 
 .table td:first-child {
@@ -279,7 +279,7 @@
 }
 
 .table tbody tr:hover td {
-  background: rgba(var(--color-gold-rgb), 0.04);
+  background: rgba(var(--color-gold-rgb) / 0.04);
 }
 
 .tableFooter {

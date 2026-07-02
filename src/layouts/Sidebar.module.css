@@ -35,7 +35,7 @@
 }
 
 .navLink:hover {
-  background: rgba(var(--color-gold-rgb), 0.08);
+  background: rgba(var(--color-gold-rgb) / 0.08);
   color: var(--color-ivory);
 }
 
@@ -98,7 +98,7 @@
 }
 
 .signOutBtn:hover {
-  background: rgba(var(--color-error-rgb), 0.1);
+  background: rgba(var(--color-error-rgb) / 0.1);
   color: var(--color-error);
 }
 
