@@ -1,14 +1,225 @@
-import styles from './Stub.module.css'
+import { useState, useId } from 'react'
+import { Link } from 'react-router-dom'
+import { questions, scoreAnswers } from '@/data/eligibilityModel'
+import styles from './Eligibility.module.css'
+
+// ── Score dial (SVG arc gauge) ────────────────────────────────────────────────
+// 270-degree arc starting at the 7:30 position (bottom-left),
+// sweeping clockwise through 12, 3, and ending at 4:30 (bottom-right).
+
+const R = 45
+const CX = 60
+const CY = 60
+const CIRCUMFERENCE = 2 * Math.PI * R        // ≈ 282.74
+const ARC_LENGTH = CIRCUMFERENCE * 0.75       // 270° portion ≈ 212.06
+
+function ScoreDial({ score }) {
+  const filledArc = Math.max(0, Math.min((score / 10) * ARC_LENGTH, ARC_LENGTH))
+
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      width="180"
+      height="180"
+      className={styles.dial}
+      role="img"
+      aria-label={`Fundability score: ${score.toFixed(1)} out of 10`}
+    >
+      {/* Background track — 270° arc */}
+      <circle
+        cx={CX} cy={CY} r={R}
+        fill="none"
+        className={styles.dialTrack}
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={`${ARC_LENGTH.toFixed(3)} ${CIRCUMFERENCE.toFixed(3)}`}
+        transform={`rotate(135 ${CX} ${CY})`}
+      />
+      {/* Gold fill arc */}
+      <circle
+        cx={CX} cy={CY} r={R}
+        fill="none"
+        className={styles.dialFill}
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={`${filledArc.toFixed(3)} ${CIRCUMFERENCE.toFixed(3)}`}
+        transform={`rotate(135 ${CX} ${CY})`}
+      />
+      {/* Score value */}
+      <text x={CX} y={CY - 4} textAnchor="middle" className={styles.dialScore}>
+        {score.toFixed(1)}
+      </text>
+      <text x={CX} y={CY + 16} textAnchor="middle" className={styles.dialUnit}>
+        out of 10
+      </text>
+    </svg>
+  )
+}
+
+// ── Band chip class map ───────────────────────────────────────────────────────
+
+const BAND_CHIP_CLASS = {
+  'Application-ready': styles.bandReady,
+  'Conditionally ready': styles.bandConditional,
+  'Not yet ready': styles.bandNotReady,
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function Eligibility() {
+  const [step, setStep] = useState(0)
+  const [answers, setAnswers] = useState({})
+  const groupId = useId()
+
+  const isComplete = step >= questions.length
+  const currentQ = isComplete ? null : questions[step]
+  const currentAnswer = currentQ != null ? (answers[currentQ.id] ?? null) : null
+  const hasAnswer = currentAnswer !== null
+
+  function handleSelect(value) {
+    if (!currentQ) return
+    setAnswers(prev => ({ ...prev, [currentQ.id]: value }))
+  }
+
+  function handleNext() {
+    if (step < questions.length - 1) {
+      setStep(s => s + 1)
+    } else {
+      setStep(questions.length) // advance to results
+    }
+  }
+
+  function handleBack() {
+    if (step > 0) setStep(s => s - 1)
+  }
+
+  function handleRetake() {
+    setStep(0)
+    setAnswers({})
+  }
+
+  // ── Result screen ───────────────────────────────────────────────────────────
+
+  if (isComplete) {
+    const { score, band, fixes } = scoreAnswers(answers)
+    const isReady = band !== 'Not yet ready'
+    const ctaHref = isReady ? '/dashboard' : '/dashboard/checklist'
+    const ctaLabel = isReady
+      ? 'Start financing application'
+      : 'Review document checklist'
+
+    return (
+      <div className={styles.page}>
+        <span className={styles.pill}>Eligibility check</span>
+        <h1 className={styles.heading}>Your fundability score</h1>
+
+        <div className={styles.resultCard}>
+          <ScoreDial score={score} />
+
+          <span className={`${styles.bandChip} ${BAND_CHIP_CLASS[band] ?? ''}`}>
+            {band}
+          </span>
+
+          {fixes.length > 0 && (
+            <div className={styles.fixSection}>
+              <h2 className={styles.fixHeading}>Areas to strengthen</h2>
+              <ul className={styles.fixList}>
+                {fixes.map(fix => (
+                  <li key={fix.pillar} className={styles.fixItem}>
+                    <span className={styles.fixPillar}>{fix.label}</span>
+                    <span className={styles.fixRemediation}>{fix.remediation}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <Link to={ctaHref} className={styles.ctaButton}>
+            {ctaLabel}
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleRetake}
+            className={styles.retakeButton}
+          >
+            Retake assessment
+          </button>
+
+          <p className={styles.disclaimer}>
+            Indicative self-assessment only. It does not constitute an offer, approval, or advice.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Question screen ─────────────────────────────────────────────────────────
+
+  const progressPct = (step / questions.length) * 100
+
   return (
     <div className={styles.page}>
       <span className={styles.pill}>Eligibility check</span>
-      <h1 className={styles.heading}>Eligibility check</h1>
-      <p className={styles.body}>
-        Your eligibility assessment results and any recommended financing tracks
-        will appear here once your profile is under review by our team.
+      <h1 className={styles.heading}>Fundability self-check</h1>
+
+      <div className={styles.progressBar} role="progressbar" aria-valuenow={step + 1} aria-valuemax={questions.length}>
+        <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
+      </div>
+      <p className={styles.progressLabel}>
+        Question {step + 1} of {questions.length}
       </p>
+
+      <div className={styles.card}>
+        <p className={styles.questionText}>{currentQ.text}</p>
+
+        <ul className={styles.optionsList} role="radiogroup" aria-label={currentQ.text}>
+          {currentQ.options.map(opt => {
+            const isChecked = currentAnswer === opt.value
+            const inputId = `${groupId}-${currentQ.id}-${opt.value}`
+            return (
+              <li key={opt.value} className={styles.optionItem}>
+                <label
+                  htmlFor={inputId}
+                  className={`${styles.optionLabel} ${isChecked ? styles.optionChecked : ''}`}
+                >
+                  <input
+                    id={inputId}
+                    type="radio"
+                    name={`${groupId}-${currentQ.id}`}
+                    value={opt.value}
+                    checked={isChecked}
+                    onChange={() => handleSelect(opt.value)}
+                    className={styles.radioInput}
+                  />
+                  <span className={styles.radioCustom} aria-hidden="true" />
+                  <span className={styles.optionText}>{opt.label}</span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className={styles.navButtons}>
+          {step > 0 && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className={styles.backButton}
+            >
+              Back
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!hasAnswer}
+            className={styles.nextButton}
+          >
+            {step < questions.length - 1 ? 'Next' : 'See results'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
