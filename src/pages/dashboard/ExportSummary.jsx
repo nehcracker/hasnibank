@@ -13,7 +13,7 @@ const FIELD_LABELS = {
   businessType: 'Business Type',
   countryOfRegistration: 'Country of Registration',
   annualRevenue: 'Annual Revenue',
-  loanPurpose: 'Loan Purpose',
+  loanPurpose: 'Financing Purpose',
   amountSought: 'Amount Sought',
   collateralAvailable: 'Collateral Available',
   collateralDescription: 'Collateral Description',

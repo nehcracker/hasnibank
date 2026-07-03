@@ -44,11 +44,11 @@
 
 /* ── Document card ───────────────────────────────────────────────────── */
 .document {
-  background: #f8f5ee;
+  background: var(--color-document-bg);
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   box-shadow: 0 8px 40px rgba(0 0 0 / 0.35);
-  color: #1a1a2e;
+  color: var(--color-document-text);
 }
 
 /* ── Brand header ────────────────────────────────────────────────────── */
@@ -71,7 +71,7 @@
 .tagline {
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: #666;
+  color: var(--color-document-secondary);
   margin: var(--space-1) 0 0;
 }
 
@@ -99,14 +99,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #888;
+  color: var(--color-document-soft);
 }
 
 .metaValue {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--color-document-text);
 }
 
 /* ── Sections ────────────────────────────────────────────────────────── */
@@ -118,7 +118,7 @@
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: 600;
-  color: #0b1220;
+  color: var(--color-navy);
   border-bottom: 1px solid rgba(0 0 0 / 0.12);
   padding-bottom: var(--space-2);
   margin: 0 0 var(--space-3);
@@ -143,7 +143,7 @@
   flex-shrink: 0;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: #666;
+  color: var(--color-document-secondary);
   font-weight: 500;
 }
 
@@ -151,7 +151,7 @@
   flex: 1;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: #1a1a2e;
+  color: var(--color-document-text);
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────── */
@@ -161,7 +161,7 @@
   border-top: 1px solid rgba(0 0 0 / 0.12);
   font-family: var(--font-body);
   font-size: var(--text-xs);
-  color: #999;
+  color: var(--color-document-faint);
   text-align: center;
   line-height: 1.6;
 }

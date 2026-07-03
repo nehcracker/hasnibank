@@ -9,6 +9,13 @@
   --color-border: #2A3654;
   --color-success: #3FA37A;
   --color-error: #e57373;
+
+  /* Printed-document palette (Export summary) */
+  --color-document-bg: #F8F5EE;
+  --color-document-text: #1A1A2E;
+  --color-document-secondary: #666666;
+  --color-document-soft: #888888;
+  --color-document-faint: #999999;
   --color-error-rgb: 229 115 115;
 
   /* Typography */

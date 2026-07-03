@@ -13,7 +13,7 @@ const TRACK_LABELS = {
 const FIELD_LABELS = {
   businessName: 'Business Name', businessType: 'Business Type',
   countryOfRegistration: 'Country of Registration', annualRevenue: 'Annual Revenue',
-  loanPurpose: 'Loan Purpose', amountSought: 'Amount Sought',
+  loanPurpose: 'Financing Purpose', amountSought: 'Amount Sought',
   collateralAvailable: 'Collateral Available', collateralDescription: 'Collateral Description',
   description: 'Description',
   projectName: 'Project Name', sector: 'Sector', fundingStructure: 'Funding Structure',

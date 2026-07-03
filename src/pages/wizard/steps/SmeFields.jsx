@@ -69,7 +69,7 @@ export default function SmeFields({ fields, onChange, onBack, onNext }) {
             <option value=">10m">Over $10M</option>
           </select>
         </Field>
-        <Field label="Loan purpose" error={err('loanPurpose')}>
+        <Field label="Financing purpose" error={err('loanPurpose')}>
           <select className={selCls('loanPurpose')} value={fields.loanPurpose}
             onChange={(e) => set('loanPurpose', e.target.value)}>
             <option value="">Select…</option>

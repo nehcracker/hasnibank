@@ -66,7 +66,7 @@ export default function ReviewSubmit({ track, fields, onEditTrack, onBack, onSub
             <Item label="Business type" value={BUSINESS_TYPE[fields.businessType]} />
             <Item label="Country of registration" value={fields.countryOfRegistration} />
             <Item label="Annual revenue" value={ANNUAL_REVENUE[fields.annualRevenue]} />
-            <Item label="Loan purpose" value={LOAN_PURPOSE[fields.loanPurpose]} />
+            <Item label="Financing purpose" value={LOAN_PURPOSE[fields.loanPurpose]} />
             <Item label="Amount sought" value={usd(fields.amountSought)} />
             <Item label="Collateral available" value={fields.collateralAvailable === 'yes' ? 'Yes' : 'No'} />
             {fields.collateralAvailable === 'yes' && (
