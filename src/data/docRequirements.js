@@ -48,7 +48,7 @@ export const TRACK_REQUIREMENTS = {
       type: 'management_accounts',
       label: 'Management Accounts',
       description:
-        'Most recent interim management accounts — typically covering the past six to twelve months of trading.',
+        'Most recent interim management accounts, typically covering the past six to twelve months of trading.',
     },
     {
       type: 'tax_clearance',
