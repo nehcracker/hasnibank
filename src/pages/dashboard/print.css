@@ -1,0 +1,63 @@
+/* ── print.css ─────────────────────────────────────────────────────────
+ * Imported as a plain global import (NOT a CSS module) in ExportSummary
+ * so @media print rules can reach the DashboardLayout chrome outside
+ * this component. Screen styles for ExportSummary live in
+ * ExportSummary.module.css.
+ *
+ * Layout data attributes wired in src/layouts/DashboardLayout.jsx:
+ *   data-print-shell    — the outer grid div (.shell)
+ *   data-print-hide     — topbarArea + sidebarArea wrappers
+ *
+ * In ExportSummary.jsx:
+ *   data-print-hide     — the controls bar (print button)
+ *   data-print-document — the document card
+ * ─────────────────────────────────────────────────────────────────── */
+
+@page {
+  margin: 2cm;
+}
+
+@media print {
+  /* ── Hide dashboard chrome and the print button ──────────────────── */
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* ── Collapse the CSS grid shell to block flow ───────────────────── */
+  /* Without this, the hidden grid areas still reserve column/row space */
+  [data-print-shell] {
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  /* ── Page and main area reset ────────────────────────────────────── */
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  main {
+    background: #ffffff !important;
+    padding: 0 !important;
+    min-height: unset !important;
+    overflow: visible !important;
+  }
+
+  /* ── Document card: remove screen decorations ────────────────────── */
+  [data-print-document] {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  /* ── Wordmark: switch from gold to navy for print legibility ─────── */
+  .hasni-wordmark {
+    color: #0b1220 !important;
+  }
+
+  /* ── Avoid page breaks splitting sections ────────────────────────── */
+  [data-print-document] > section {
+    break-inside: avoid;
+  }
+}

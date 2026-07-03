@@ -12,14 +12,14 @@ export default function DashboardLayout() {
   const toggle = () => setSidebarOpen(v => !v)
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-print-shell>
       {/* Topbar — sticky, spans full width */}
-      <div className={styles.topbarArea}>
+      <div className={styles.topbarArea} data-print-hide>
         <Topbar onMenuToggle={toggle} />
       </div>
 
       {/* Sidebar — sticky column or off-canvas on mobile */}
-      <div className={`${styles.sidebarArea}${sidebarOpen ? ' ' + styles.drawerOpen : ''}`}>
+      <div className={`${styles.sidebarArea}${sidebarOpen ? ' ' + styles.drawerOpen : ''}`} data-print-hide>
         <Sidebar onClose={close} />
       </div>
 
