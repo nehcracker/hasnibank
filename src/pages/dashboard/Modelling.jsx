@@ -52,8 +52,14 @@ export default function Modelling() {
   const [scenarios, setScenarios] = useState([])
 
   // Patch-based updater — only override the keys that changed.
+  // Grace must stay strictly below the term or the engine's remaining-period
+  // count goes negative and the schedule never closes to zero.
   function handleTermsChange(patch) {
-    setTerms(prev => ({ ...prev, ...patch }))
+    setTerms(prev => {
+      const next = { ...prev, ...patch }
+      next.graceMonths = Math.max(0, Math.min(next.graceMonths, next.termMonths - 1))
+      return next
+    })
   }
 
   // Snapshot the current terms as the next available scenario slot.
