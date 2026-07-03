@@ -13,6 +13,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
+// Unique per-instance suffix — see useApplication.js: reusing a channel topic
+// across consumers (or a StrictMode remount racing async channel removal)
+// throws when postgres_changes callbacks are added after subscribe().
+let channelSeq = 0
+
 export function useRealtimeEvents(applicationId) {
   const [events, setEvents] = useState([])
   // Initialise to now so pre-existing events do not count as unread on mount
@@ -42,7 +47,7 @@ export function useRealtimeEvents(applicationId) {
 
     // Subscribe to new inserts for this application
     const channel = supabase
-      .channel('events-' + applicationId)
+      .channel(`events-${applicationId}-${++channelSeq}`)
       .on(
         'postgres_changes',
         {

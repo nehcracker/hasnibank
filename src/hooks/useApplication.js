@@ -16,6 +16,12 @@ import { useAuth } from '@/hooks/useAuth'
  *
  * @returns {{ application: object|null, loading: boolean, refresh: () => Promise<void> }}
  */
+// Channel topics must be unique per hook instance: supabase.channel() returns
+// the existing channel for an already-registered topic, and adding
+// postgres_changes callbacks to a channel that another consumer has already
+// subscribed throws — which unmounted the whole dashboard tree.
+let channelSeq = 0
+
 export function useApplication() {
   const { user } = useAuth()
   const [application, setApplication] = useState(null)
@@ -51,7 +57,7 @@ export function useApplication() {
     if (!user) return
 
     const channel = supabase
-      .channel('application-status-' + user.id)
+      .channel(`application-status-${user.id}-${++channelSeq}`)
       .on(
         'postgres_changes',
         {
