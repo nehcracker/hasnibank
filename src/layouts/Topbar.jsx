@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import ClientIdBadge from '@/components/dashboard/ClientIdBadge'
+import NotificationsBell from '@/components/dashboard/NotificationsBell'
 import styles from './Topbar.module.css'
 
 function HamburgerIcon() {
@@ -77,8 +78,7 @@ export default function Topbar({ onMenuToggle }) {
 
       {/* Right cluster */}
       <div className={styles.right}>
-        {/* Placeholder — Task 8 fills this with notifications */}
-        <div data-slot="notifications" className={styles.notifSlot} />
+        <NotificationsBell />
 
         {/* Profile menu */}
         <div className={styles.profileMenu} ref={menuRef}>

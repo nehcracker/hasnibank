@@ -6,8 +6,13 @@ import { useAuth } from '@/hooks/useAuth'
  * useApplication
  *
  * Fetches the current user's single financing application on mount.
+ * Subscribes to realtime UPDATE events on the applications table so that
+ * status changes made by staff propagate to the borrower view without a reload.
  * Exposes a refresh() function so callers (e.g. Overview) can re-fetch
  * after the wizard completes.
+ *
+ * MANUAL STEP: Realtime must be enabled on `applications` in Supabase
+ * Dashboard → Database → Replication for live status updates to work.
  *
  * @returns {{ application: object|null, loading: boolean, refresh: () => Promise<void> }}
  */
@@ -36,9 +41,35 @@ export function useApplication() {
     setLoading(false)
   }, [user])
 
+  // Initial fetch
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  // Realtime subscription — UPDATE on this user's application row
+  useEffect(() => {
+    if (!user) return
+
+    const channel = supabase
+      .channel('application-status-' + user.id)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'applications',
+          filter: 'applicant_id=eq.' + user.id,
+        },
+        (payload) => {
+          setApplication(payload.new)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user])
 
   return { application, loading, refresh }
 }
