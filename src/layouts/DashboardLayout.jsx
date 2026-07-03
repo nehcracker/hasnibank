@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
+import ErrorBoundary from '@/components/dashboard/ErrorBoundary'
 import styles from './DashboardLayout.module.css'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const location = useLocation()
 
   const open  = () => setSidebarOpen(true)
   const close = () => setSidebarOpen(false)
@@ -23,9 +25,12 @@ export default function DashboardLayout() {
         <Sidebar onClose={close} />
       </div>
 
-      {/* Main content area — renders the matched child route */}
+      {/* Main content area — renders the matched child route.
+          Keyed by pathname so a tripped boundary resets on navigation. */}
       <main className={styles.mainArea}>
-        <Outlet />
+        <ErrorBoundary key={location.pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* Backdrop overlay — visible only on mobile when drawer is open */}
