@@ -35,7 +35,7 @@ export default function AdminApplication() {
   useEffect(() => {
     supabase
       .from('applications')
-      .select('*, applicant:profiles!applicant_id(full_name)')
+      .select('*, applicant:profiles!applicant_id(full_name, email, phone, country, occupation, company_name, client_ref)')
       .eq('id', id)
       .single()
       .then(({ data, error }) => {
@@ -77,11 +77,20 @@ export default function AdminApplication() {
           <div>
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Applicant</h2>
-              <div className={styles.fieldRow}>
-                <span className={styles.fieldLabel}>Name</span>
-                <span className={styles.fieldValue}>{applicant?.full_name ?? '—'}</span>
-              </div>
-
+              {[
+                ['Name', applicant?.full_name],
+                ['Email', applicant?.email],
+                ['Phone', applicant?.phone],
+                ['Country', applicant?.country],
+                ['Occupation', applicant?.occupation],
+                ['Company', applicant?.company_name],
+                ['Client ID', applicant?.client_ref],
+              ].map(([label, value]) => (
+                <div key={label} className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>{label}</span>
+                  <span className={styles.fieldValue}>{value || '—'}</span>
+                </div>
+              ))}
             </div>
 
             <div className={styles.section}>

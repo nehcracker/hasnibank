@@ -42,6 +42,12 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  async function refreshProfile() {
+    if (!session) return
+    const p = await fetchProfile(session.user.id)
+    setProfile(p)
+  }
+
   return (
     <AuthContext.Provider value={{
       session,
@@ -49,6 +55,7 @@ export function AuthProvider({ children }) {
       profile,
       role: profile?.role ?? null,
       loading,
+      refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>

@@ -53,6 +53,71 @@
   background: var(--color-border);
 }
 
+.input {
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-fast);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-gold);
+}
+
+.statusError {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: rgba(var(--color-error-rgb) / 0.08);
+  border: 1px solid rgba(var(--color-error-rgb) / 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.statusSaved {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-success);
+  background: rgba(var(--color-success-rgb) / 0.08);
+  border: 1px solid rgba(var(--color-success-rgb) / 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.saveBtn {
+  align-self: flex-start;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: var(--color-gold-soft);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.signOutRow {
+  margin-top: var(--space-6);
+}
+
 .signOutBtn {
   align-self: flex-start;
   padding: var(--space-3) var(--space-6);

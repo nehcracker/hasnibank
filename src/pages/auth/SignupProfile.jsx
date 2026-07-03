@@ -24,6 +24,7 @@ export default function SignupProfile() {
 
     const { error } = await supabase.from('profiles').insert({
       id: user.id,
+      email: user.email,
       full_name: fullName,
       company_name: companyName,
       country,
