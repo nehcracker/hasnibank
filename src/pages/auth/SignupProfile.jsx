@@ -10,6 +10,8 @@ export default function SignupProfile() {
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [country, setCountry] = useState('')
+  const [phone, setPhone] = useState('')
+  const [occupation, setOccupation] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -28,6 +30,8 @@ export default function SignupProfile() {
       full_name: fullName,
       company_name: companyName,
       country,
+      phone,
+      occupation,
       role: 'borrower',
       profile_complete: true,
     })
@@ -87,6 +91,32 @@ export default function SignupProfile() {
               required
               value={country}
               onChange={e => setCountry(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="phone">Phone</label>
+            <input
+              id="phone"
+              className={styles.input}
+              type="tel"
+              autoComplete="tel"
+              required
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="occupation">Occupation</label>
+            <input
+              id="occupation"
+              className={styles.input}
+              type="text"
+              autoComplete="organization-title"
+              required
+              value={occupation}
+              onChange={e => setOccupation(e.target.value)}
             />
           </div>
 
