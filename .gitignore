@@ -10,3 +10,8 @@ dist/
 .claude/
 .qodo/
 .superpowers/
+
+# Local debug/verification artifacts
+verify-*.png
+verify-*.mjs
+*.code-workspace
