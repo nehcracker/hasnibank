@@ -1,0 +1,171 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 960px;
+}
+
+.loading {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* 1. Header strip */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-1);
+}
+
+.subline {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.pillAction,
+.pillMonitor {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.pillAction {
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold-soft);
+}
+
+.pillMonitor {
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+/* 4. Supporting row */
+.supportRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 720px) {
+  .supportRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.supportCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-decoration: none;
+  transition: border-color var(--transition-fast);
+}
+
+.supportCard:hover {
+  border-color: var(--color-gold);
+}
+
+.supportTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.supportValue {
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: 0;
+}
+
+.supportMuted {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.sparkline {
+  width: 100%;
+  height: 32px;
+}
+
+/* 5. Activity feed */
+.activity {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.activityTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-4);
+}
+
+.activityEmpty {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.eventList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.eventItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.eventDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.eventLink {
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  text-decoration: none;
+}
+
+.eventLink:hover {
+  color: var(--color-gold-soft);
+}
+
+.eventTime {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
