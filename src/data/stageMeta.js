@@ -65,4 +65,16 @@ const stageMeta = [
   },
 ]
 
+/**
+ * Borrower-facing phases — the 9 staff stages condensed into 4 steps.
+ * `draft` is a pre-submission status introduced in Phase B; it has no
+ * stageMeta entry but belongs to the Apply phase.
+ */
+export const PHASES = [
+  { phase: 1, label: 'Apply', statuses: ['draft', 'submitted', 'kyc_verification'] },
+  { phase: 2, label: 'Assessment', statuses: ['credit_assessment', 'funder_matching'] },
+  { phase: 3, label: 'Offer', statuses: ['term_sheet', 'offer_issued', 'offer_accepted'] },
+  { phase: 4, label: 'Funding', statuses: ['fee_payment', 'funded'] },
+]
+
 export default stageMeta
