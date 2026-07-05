@@ -30,6 +30,7 @@ export default function AdminApplication() {
   const { id } = useParams()
   const { user } = useAuth()
   const [application, setApplication] = useState(null)
+  const [loadError, setLoadError] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,7 +40,13 @@ export default function AdminApplication() {
       .eq('id', id)
       .single()
       .then(({ data, error }) => {
-        if (!error) setApplication(data)
+        if (error) {
+          console.error('[AdminApplication] load error:', error.message)
+          // PGRST116 = zero rows for .single(); anything else is a real failure
+          if (error.code !== 'PGRST116') setLoadError(error.message)
+        } else {
+          setApplication(data)
+        }
         setLoading(false)
       })
   }, [id])
@@ -55,7 +62,11 @@ export default function AdminApplication() {
   if (!application) {
     return (
       <div className={styles.page}>
-        <div className={styles.inner}><p className={styles.loadingMsg}>Application not found.</p></div>
+        <div className={styles.inner}>
+          <p className={styles.loadingMsg}>
+            {loadError ? `Failed to load application: ${loadError}` : 'Application not found.'}
+          </p>
+        </div>
       </div>
     )
   }
