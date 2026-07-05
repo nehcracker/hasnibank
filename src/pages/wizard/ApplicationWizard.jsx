@@ -11,7 +11,7 @@ import styles from './Wizard.module.css'
 
 const STEPS = ['Track', 'Details', 'Review']
 
-const INITIAL_FIELDS = {
+export const INITIAL_FIELDS = {
   sme: {
     businessName: '', businessType: '', countryOfRegistration: '',
     annualRevenue: '', loanPurpose: '', amountSought: '',

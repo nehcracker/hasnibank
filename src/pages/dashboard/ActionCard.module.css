@@ -1,0 +1,233 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-4);
+}
+
+.body {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  margin: 0 0 var(--space-4);
+  line-height: 1.6;
+}
+
+.slaInline {
+  color: var(--color-gold-soft);
+}
+
+/* Completion bar */
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-gold);
+  transition: width var(--transition-fast);
+}
+
+.progressLabel {
+  font-size: var(--text-sm);
+  color: var(--color-gold-soft);
+  white-space: nowrap;
+}
+
+/* Two-column draft layout */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columnTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.itemDone {
+  color: var(--color-ivory);
+}
+
+.itemPending {
+  color: var(--color-muted);
+}
+
+.uploadLink {
+  margin-left: auto;
+  color: var(--color-gold-soft);
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.moreLink {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--color-gold-soft);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.allReceived {
+  font-size: var(--text-sm);
+  color: var(--color-success);
+  margin: 0;
+}
+
+/* Actions */
+.actionRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.primaryBtn:hover {
+  background: var(--color-gold-soft);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondaryLink {
+  color: var(--color-gold-soft);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.secondaryLink:hover {
+  color: var(--color-gold);
+}
+
+.caption {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* While you wait */
+.waitList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.waitLink {
+  color: var(--color-gold-soft);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.waitLink:hover {
+  color: var(--color-gold);
+}
+
+/* Offer terms */
+.termsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .termsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.term {
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.termLabel {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-1);
+}
+
+.termValue {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--color-gold-soft);
+  margin: 0;
+}

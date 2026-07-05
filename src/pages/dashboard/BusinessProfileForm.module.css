@@ -1,0 +1,220 @@
+.form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+/* Section stepper */
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 720px) {
+  .stepper {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.stepBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast);
+}
+
+.stepBtn[data-active] {
+  border-color: var(--color-gold);
+  color: var(--color-ivory);
+}
+
+.stepBtn[data-done] .stepNum {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-navy);
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+.stepLabel {
+  line-height: 1.3;
+}
+
+/* Save state row */
+.saveRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  margin-bottom: var(--space-3);
+}
+
+.saveState {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.saveState[data-state='saved'] {
+  color: var(--color-success);
+}
+
+.saveState[data-state='error'] {
+  color: var(--color-error);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.closeBtn:hover {
+  color: var(--color-ivory);
+}
+
+/* Section content */
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-1);
+}
+
+.sectionSub {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+}
+
+.input,
+.select {
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+.radioGroup {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  cursor: pointer;
+}
+
+.errorMsg {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+/* Nav */
+.navRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.backBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.backBtn:hover {
+  color: var(--color-ivory);
+  border-color: var(--color-muted);
+}
+
+.completeBtn {
+  background: var(--color-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-navy);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.completeBtn:hover {
+  background: var(--color-gold-soft);
+}
+
+.purposeWrap {
+  /* The wizard field components carry their own layout classes */
+  margin-top: var(--space-2);
+}
+
+.caption {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin: var(--space-4) 0 0;
+}
