@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { financingTracks } from '@/data/financingData'
+import { overallDraftCompletion } from '@/lib/applicationState'
 import ServiceCard from '@/components/dashboard/ServiceCard'
-import ApplicationWizard from '@/pages/wizard/ApplicationWizard'
 import styles from './Overview.module.css'
 
 /** Map track id → display label from the canonical data source */
@@ -24,16 +25,34 @@ function capitalise(str) {
 
 export default function Overview() {
   const { profile } = useAuth()
-  const { application, loading, refresh } = useApplication()
-  const [wizardOpen, setWizardOpen] = useState(false)
+  const { application, loading } = useApplication()
+  const [documents, setDocuments] = useState([])
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there'
   const clientRef = profile?.client_ref
+  const isDraft = application?.status === 'draft'
 
-  function handleWizardComplete() {
-    setWizardOpen(false)
-    refresh()
-  }
+  // Draft completion needs the uploaded-documents list
+  useEffect(() => {
+    if (!application?.id || application.status !== 'draft') return
+    let cancelled = false
+    supabase
+      .from('application_documents')
+      .select('*')
+      .eq('application_id', application.id)
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.warn('[Overview] application_documents unavailable:', error.message)
+          setDocuments([])
+        } else {
+          setDocuments(data ?? [])
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [application?.id, application?.status])
 
   if (loading) {
     return (
@@ -41,10 +60,6 @@ export default function Overview() {
         <p className={styles.loading}>Loading your overview...</p>
       </div>
     )
-  }
-
-  if (wizardOpen) {
-    return <ApplicationWizard onComplete={handleWizardComplete} />
   }
 
   return (
@@ -69,7 +84,7 @@ export default function Overview() {
                 title={track.title}
                 description={track.description}
                 actionLabel="Apply now"
-                onAction={() => setWizardOpen(true)}
+                href={`/dashboard/start?track=${track.id}`}
               />
             ))}
           </div>
@@ -96,11 +111,13 @@ export default function Overview() {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Stage</span>
               <span className={styles.summaryValue}>
-                {capitalise(application.status)}
+                {isDraft
+                  ? `Draft · ${overallDraftCompletion(application, documents)}% complete`
+                  : capitalise(application.status)}
               </span>
             </div>
             <Link to="/dashboard/application" className={styles.viewLink}>
-              View full application
+              {isDraft ? 'Resume' : 'View full application'}
             </Link>
           </div>
         </section>

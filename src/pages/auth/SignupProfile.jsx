@@ -43,7 +43,7 @@ export default function SignupProfile() {
     }
 
     sessionStorage.removeItem('signup_email')
-    navigate('/dashboard', { replace: true })
+    navigate('/dashboard/start', { replace: true })
   }
 
   return (

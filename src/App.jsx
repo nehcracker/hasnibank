@@ -30,6 +30,7 @@ import DashboardLayout from '@/layouts/DashboardLayout'
 // Dashboard pages
 import Overview from '@/pages/dashboard/Overview'
 import MyApplication from '@/pages/dashboard/MyApplication'
+import StartApplication from '@/pages/dashboard/StartApplication'
 import Modelling from '@/pages/dashboard/Modelling'
 import DocumentsPage from '@/pages/dashboard/DocumentsPage'
 import DocChecklist from '@/pages/dashboard/DocChecklist'
@@ -84,6 +85,7 @@ function AppInner() {
             <ProtectedRoute requiredRole="borrower"><DashboardLayout /></ProtectedRoute>
           }>
             <Route index                    element={<Overview />} />
+            <Route path="start"             element={<StartApplication />} />
             <Route path="application"       element={<MyApplication />} />
             <Route path="modelling"         element={<Modelling />} />
             <Route path="documents"         element={<DocumentsPage />} />

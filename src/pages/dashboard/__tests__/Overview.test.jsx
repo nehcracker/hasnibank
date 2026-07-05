@@ -9,8 +9,14 @@ const { mockUseAuth, mockUseApplication } = vi.hoisted(() => ({
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/hooks/useApplication', () => ({ useApplication: mockUseApplication }))
-vi.mock('@/pages/wizard/ApplicationWizard', () => ({
-  default: function MockWizard() { return null },
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ data: [], error: null }),
+      }),
+    }),
+  },
 }))
 
 import Overview from '../Overview'
@@ -54,11 +60,36 @@ test('renders 4 financing-track service cards when no application', () => {
   expect(screen.getByText('Acquisition Finance')).toBeInTheDocument()
 })
 
+// Test 1b: Service cards link into the start flow with track preselected
+test('service cards link to /dashboard/start with track param', () => {
+  setup(null)
+  const links = screen.getAllByRole('link')
+  const smeCard = links.find(
+    (l) => l.getAttribute('href') === '/dashboard/start?track=sme'
+  )
+  expect(smeCard).toBeTruthy()
+})
+
 // Test 2: Application exists — summary card shows track label and stage
 test('renders application summary card with track label and stage when application exists', () => {
   setup(SAMPLE_APPLICATION)
   expect(screen.getByText('SME Financing')).toBeInTheDocument()
   expect(screen.getByText('Submitted')).toBeInTheDocument()
+  expect(screen.getByText('View full application')).toBeInTheDocument()
+})
+
+// Test 2b: Draft application — completion summary and Resume link
+test('renders draft summary with completion percentage and resume link', () => {
+  setup({
+    ...SAMPLE_APPLICATION,
+    status: 'draft',
+    business_profile: {
+      progress: { registration: true, trading: true, financials: true, purpose: true },
+    },
+  })
+  // Full profile, no documents: 60% weighted completion
+  expect(screen.getByText(/draft · 60% complete/i)).toBeInTheDocument()
+  expect(screen.getByText('Resume')).toBeInTheDocument()
 })
 
 // Test 3a: Self-service tool cards — no application state
