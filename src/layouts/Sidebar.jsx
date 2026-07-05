@@ -87,7 +87,7 @@ function IconSignOut() {
 const NAV_ITEMS = [
   { to: '/dashboard',             end: true,  label: 'Overview',             Icon: IconOverview },
   { to: '/dashboard/application',             label: 'My application',       Icon: IconApplication },
-  { to: '/dashboard/modelling',               label: 'Repayment modelling',  Icon: IconModelling },
+  { to: '/dashboard/modelling',               label: 'Repayments',           Icon: IconModelling },
   { to: '/dashboard/documents',               label: 'Documents',            Icon: IconDocuments },
   { to: '/dashboard/checklist',               label: 'Checklist',            Icon: IconChecklist },
   { to: '/dashboard/messages',                label: 'Messages',             Icon: IconMessages },

@@ -15,9 +15,10 @@ export default function ProgressTracker({ status }) {
       <div className={styles.stages}>
         {stageMeta.map((stage, i) => {
           const state = i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'future'
-          const [slaMin, slaMax] = stage.slaDays
           return (
             <Fragment key={stage.key}>
+              {/* SLA copy lives in PhaseRail's expanded segment and the
+                  in-review ActionCard, never under individual circles */}
               <div
                 className={styles.stageCell}
                 data-state={state}
@@ -28,11 +29,6 @@ export default function ProgressTracker({ status }) {
                   {state === 'done' ? '✓' : i + 1}
                 </div>
                 <span className={styles.stageLabel}>{stage.label}</span>
-                {state === 'active' && (
-                  <span className={styles.stageSLA}>
-                    typically {slaMin} to {slaMax} business days
-                  </span>
-                )}
               </div>
               {i < STAGES.length - 1 && (
                 <div className={styles.connector} data-state={state} />

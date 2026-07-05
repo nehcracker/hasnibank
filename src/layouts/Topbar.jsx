@@ -32,6 +32,18 @@ function SignOutIcon() {
   )
 }
 
+/**
+ * Company line renders only for a real value. Seeded test profiles carried
+ * filler like "NOT NULL"; company_name is required at signup so this only
+ * guards seeded rows.
+ */
+function displayCompany(name) {
+  if (!name) return null
+  const trimmed = name.trim()
+  if (!trimmed || /^(not null|null|n\/a|none|-+)$/i.test(trimmed)) return null
+  return trimmed
+}
+
 export default function Topbar({ onMenuToggle }) {
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -92,8 +104,10 @@ export default function Topbar({ onMenuToggle }) {
               <p className={styles.profileName}>
                 {profile?.full_name ?? 'Account'}
               </p>
-              {profile?.company_name && (
-                <p className={styles.profileCompany}>{profile.company_name}</p>
+              {displayCompany(profile?.company_name) && (
+                <p className={styles.profileCompany}>
+                  {displayCompany(profile.company_name)}
+                </p>
               )}
             </div>
             <span className={`${styles.profileChevron}${open ? ' ' + styles.rotated : ''}`}>
@@ -105,8 +119,10 @@ export default function Topbar({ onMenuToggle }) {
             <div className={styles.dropdown} role="menu">
               <div className={styles.dropdownInfo}>
                 <p className={styles.dropdownName}>{profile?.full_name ?? '—'}</p>
-                {profile?.company_name && (
-                  <p className={styles.dropdownCompany}>{profile.company_name}</p>
+                {displayCompany(profile?.company_name) && (
+                  <p className={styles.dropdownCompany}>
+                    {displayCompany(profile.company_name)}
+                  </p>
                 )}
               </div>
               <button
