@@ -382,39 +382,39 @@ dscr({ netOperatingIncomePerPeriod, schedule }) ->
 
 ## Task 14: SQL migration — draft status, business_profile, submitted_at
 
-**Files:** Create `sql/phase3b-application-redesign.sql`
+  **Files:** Create `sql/phase3b-application-redesign.sql`
 
-```sql
--- 1. Allow a pre-submission draft state
-alter table public.applications drop constraint if exists applications_status_check;
-alter table public.applications add constraint applications_status_check
-  check (status in (
-    'draft', 'submitted', 'kyc_verification', 'credit_assessment',
-    'funder_matching', 'term_sheet', 'offer_issued', 'offer_accepted',
-    'fee_payment', 'funded'
-  ));
-alter table public.applications alter column status set default 'draft';
+  ```sql
+  -- 1. Allow a pre-submission draft state
+  alter table public.applications drop constraint if exists applications_status_check;
+  alter table public.applications add constraint applications_status_check
+    check (status in (
+      'draft', 'submitted', 'kyc_verification', 'credit_assessment',
+      'funder_matching', 'term_sheet', 'offer_issued', 'offer_accepted',
+      'fee_payment', 'funded'
+    ));
+  alter table public.applications alter column status set default 'draft';
 
--- 2. Business profile workspace + submission timestamp
-alter table public.applications
-  add column if not exists business_profile jsonb not null default '{}'::jsonb,
-  add column if not exists submitted_at timestamptz;
+  -- 2. Business profile workspace + submission timestamp
+  alter table public.applications
+    add column if not exists business_profile jsonb not null default '{}'::jsonb,
+    add column if not exists submitted_at timestamptz;
 
-comment on column public.applications.business_profile is
-  'Shape: { "registration": {...}, "trading": {...}, "financials": {...}, "purpose": {...}, "progress": { "registration": bool, "trading": bool, "financials": bool, "purpose": bool } }';
+  comment on column public.applications.business_profile is
+    'Shape: { "registration": {...}, "trading": {...}, "financials": {...}, "purpose": {...}, "progress": { "registration": bool, "trading": bool, "financials": bool, "purpose": bool } }';
 
--- 3. Borrowers may update their own row ONLY while in draft
-create policy "Borrowers update own draft"
-  on public.applications for update
-  using (applicant_id = auth.uid() and status = 'draft')
-  with check (applicant_id = auth.uid()
-              and status in ('draft', 'submitted'));
-```
+  -- 3. Borrowers may update their own row ONLY while in draft
+  create policy "Borrowers update own draft"
+    on public.applications for update
+    using (applicant_id = auth.uid() and status = 'draft')
+    with check (applicant_id = auth.uid()
+                and status in ('draft', 'submitted'));
+  ```
 
-- [ ] **Step 1:** Verify the exact existing check-constraint name via `select conname from pg_constraint where conrelid = 'public.applications'::regclass;` and adjust the drop statement if it differs
-- [ ] **Step 2:** Run in Supabase SQL Editor; verify a borrower session can update its own draft row but not a submitted one
-- [ ] **Step 3:** Confirm `amount_sought` stays NOT NULL — drafts are always created with track + amount (Task 18), so no relaxation needed
-- [ ] **Step 4:** Commit — `chore: draft status, business_profile jsonb, submitted_at migration`
+  - [ ] **Step 1:** Verify the exact existing check-constraint name via `select conname from pg_constraint where conrelid = 'public.applications'::regclass;` and adjust the drop statement if it differs
+  - [ ] **Step 2:** Run in Supabase SQL Editor; verify a borrower session can update its own draft row but not a submitted one
+  - [ ] **Step 3:** Confirm `amount_sought` stays NOT NULL — drafts are always created with track + amount (Task 18), so no relaxation needed
+  - [ ] **Step 4:** Commit — `chore: draft status, business_profile jsonb, submitted_at migration`
 
 ---
 

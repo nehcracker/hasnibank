@@ -26,8 +26,18 @@ comment on column public.applications.business_profile is
   'Shape: { "registration": {...}, "trading": {...}, "financials": {...}, "purpose": {...}, "progress": { "registration": bool, "trading": bool, "financials": bool, "purpose": bool } }';
 
 -- 3. Borrowers may update their own row ONLY while in draft
+drop policy if exists "Borrowers update own draft" on public.applications;
 create policy "Borrowers update own draft"
   on public.applications for update
   using (applicant_id = auth.uid() and status = 'draft')
   with check (applicant_id = auth.uid()
               and status in ('draft', 'submitted'));
+
+-- 4. Borrowers may accept an issued offer (offer_issued -> offer_accepted).
+-- Without this, the dashboard "Accept offer" update is silently blocked by
+-- RLS — no borrower update policy existed before Phase B.
+drop policy if exists "Borrowers accept own offer" on public.applications;
+create policy "Borrowers accept own offer"
+  on public.applications for update
+  using (applicant_id = auth.uid() and status = 'offer_issued')
+  with check (applicant_id = auth.uid() and status = 'offer_accepted');
