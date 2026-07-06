@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import stageMeta from '@/data/stageMeta'
 import styles from './ActionCard.module.css'
@@ -56,9 +57,12 @@ function CircleIcon() {
  * @param {boolean} props.canSubmitNow
  * @param {boolean} props.submitting
  * @param {boolean} props.accepting
+ * @param {Array}  props.rfis            information_requests rows
+ * @param {string|null} props.respondingRfiId  request currently being sent
  * @param {(section: string) => void} props.onResume
  * @param {() => void} props.onSubmit
  * @param {() => void} props.onAcceptOffer
+ * @param {(rfi: object, response: { file?: File, value?: string }) => void} props.onRespondRfi
  */
 export default function ActionCard({
   state,
@@ -68,9 +72,12 @@ export default function ActionCard({
   canSubmitNow = false,
   submitting = false,
   accepting = false,
+  rfis = [],
+  respondingRfiId = null,
   onResume,
   onSubmit,
   onAcceptOffer,
+  onRespondRfi,
 }) {
   return (
     <section className={styles.card} aria-label="Next step">
@@ -82,9 +89,12 @@ export default function ActionCard({
         canSubmitNow={canSubmitNow}
         submitting={submitting}
         accepting={accepting}
+        rfis={rfis}
+        respondingRfiId={respondingRfiId}
         onResume={onResume}
         onSubmit={onSubmit}
         onAcceptOffer={onAcceptOffer}
+        onRespondRfi={onRespondRfi}
       />
     </section>
   )
@@ -95,6 +105,14 @@ function CardBody(props) {
     case 'draft_profile':
     case 'draft_kyc':
       return <DraftBlock {...props} />
+    case 'rfi_open':
+      return (
+        <RfiBlock
+          rfis={props.rfis}
+          respondingRfiId={props.respondingRfiId}
+          onRespondRfi={props.onRespondRfi}
+        />
+      )
     case 'in_review':
       return <InReviewBlock application={props.application} />
     case 'offer_issued':
@@ -213,6 +231,103 @@ function DraftBlock({
         Your progress saves automatically. Submission unlocks when both parts are
         complete.
       </p>
+    </>
+  )
+}
+
+/* ── Open information requests ─────────────────────────────────────────────── */
+
+function formatDue(date) {
+  if (!date) return null
+  return new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+}
+
+function RfiRow({ rfi, responding, onRespondRfi }) {
+  const [value, setValue] = useState('')
+
+  return (
+    <li className={styles.rfiItem}>
+      <p className={styles.rfiPrompt}>{rfi.prompt}</p>
+      <p className={styles.rfiMeta}>
+        Requested to progress your assessment
+        {rfi.due_date ? ` · needed by ${formatDue(rfi.due_date)}` : ''}
+      </p>
+
+      {rfi.response_type === 'document' ? (
+        <label className={styles.uploadControl}>
+          <span className={styles.uploadControlLabel}>
+            {responding ? 'Uploading...' : 'Upload response'}
+          </span>
+          <input
+            type="file"
+            className={styles.fileInput}
+            aria-label="Upload response"
+            disabled={responding}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) onRespondRfi?.(rfi, { file })
+            }}
+          />
+        </label>
+      ) : (
+        <div className={styles.rfiAnswerRow}>
+          <input
+            type={rfi.response_type === 'figure' ? 'number' : 'text'}
+            className={styles.rfiAnswerInput}
+            placeholder={
+              rfi.response_type === 'figure' ? 'Enter the figure' : 'Type your answer'
+            }
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            disabled={responding}
+          />
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            disabled={responding || !value.trim()}
+            onClick={() => onRespondRfi?.(rfi, { value: value.trim() })}
+          >
+            {responding ? 'Sending...' : 'Send response'}
+          </button>
+        </div>
+      )}
+    </li>
+  )
+}
+
+function RfiBlock({ rfis = [], respondingRfiId, onRespondRfi }) {
+  const open = rfis.filter((r) => r.status === 'open')
+  const responded = rfis.filter((r) => r.status === 'responded')
+
+  return (
+    <>
+      <h2 className={styles.title}>
+        The assessment team has requested {open.length} item{open.length === 1 ? '' : 's'}
+      </h2>
+      <p className={styles.body}>
+        Responding promptly keeps your assessment moving. Each item below can be
+        resolved right here.
+      </p>
+      <ul className={styles.rfiList}>
+        {open.map((rfi) => (
+          <RfiRow
+            key={rfi.id}
+            rfi={rfi}
+            responding={respondingRfiId === rfi.id}
+            onRespondRfi={onRespondRfi}
+          />
+        ))}
+      </ul>
+      {responded.length > 0 && (
+        <ul className={styles.rfiList}>
+          {responded.map((rfi) => (
+            <li key={rfi.id} className={styles.rfiItemSent}>
+              <p className={styles.rfiPrompt}>{rfi.prompt}</p>
+              <p className={styles.rfiMeta}>Sent · awaiting review</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   )
 }

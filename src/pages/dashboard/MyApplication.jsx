@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,11 +23,23 @@ const STAGE_LABEL = Object.fromEntries(stageMeta.map((s) => [s.key, s.label]))
 
 const EVENT_META = {
   status_change: { label: 'Status update', to: '/dashboard/application' },
+  stage_override: { label: 'Status update', to: '/dashboard/application' },
   note: { label: 'Note', to: '/dashboard/application' },
   document: { label: 'Document', to: '/dashboard/documents' },
   message: { label: 'Message', to: '/dashboard/messages' },
   fee: { label: 'Fee', to: '/dashboard/fees' },
   payment: { label: 'Payment', to: '/dashboard/fees' },
+  rfi: { label: 'Information request', to: '/dashboard/application' },
+  offer: { label: 'Offer', to: '/dashboard/application' },
+  disbursement: { label: 'Disbursement', to: '/dashboard/application' },
+}
+
+const RFI_EVENT_DETAIL = {
+  requested: 'New item requested by the assessment team',
+  responded: 'Your response was sent for review',
+  resolved: 'A requested item was resolved',
+  returned: 'A request was returned with a reviewer note',
+  withdrawn: 'A request was withdrawn',
 }
 
 function money(amount, currency = 'USD') {
@@ -40,6 +52,14 @@ function eventDetail(ev) {
   switch (ev.event_type) {
     case 'status_change':
       return `Advanced to ${STAGE_LABEL[payload.new_status] ?? payload.new_status}`
+    case 'stage_override':
+      return `Advanced to ${STAGE_LABEL[payload.to] ?? payload.to}`
+    case 'rfi':
+      return RFI_EVENT_DETAIL[payload.action] ?? 'Information request updated'
+    case 'offer':
+      return payload.detail ?? 'Offer updated'
+    case 'disbursement':
+      return payload.detail ?? 'Disbursement updated'
     case 'note':
       return payload.body ?? 'Note added'
     case 'document':
@@ -114,9 +134,52 @@ export default function MyApplication() {
   const { events } = useRealtimeEvents(application?.id)
 
   const [documents, setDocuments] = useState([])
+  const [rfis, setRfis] = useState([])
   const [formSection, setFormSection] = useState(null) // section key = form open
   const [submitting, setSubmitting] = useState(false)
   const [accepting, setAccepting] = useState(false)
+  const [respondingRfiId, setRespondingRfiId] = useState(null)
+
+  const loadRfis = useCallback(async () => {
+    if (!application?.id) return
+    const { data, error } = await supabase
+      .from('information_requests')
+      .select('*')
+      .eq('application_id', application.id)
+      .order('created_at', { ascending: true })
+    if (error) {
+      // Table may not exist yet in this environment — treat as empty list
+      console.warn('[MyApplication] information_requests unavailable:', error.message)
+      setRfis([])
+    } else {
+      setRfis(data ?? [])
+    }
+  }, [application?.id])
+
+  useEffect(() => {
+    loadRfis()
+  }, [loadRfis])
+
+  // Staff-created requests appear without a refresh
+  useEffect(() => {
+    if (!application?.id) return
+    const channel = supabase
+      .channel(`rfis-${application.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'information_requests',
+          filter: `application_id=eq.${application.id}`,
+        },
+        () => loadRfis()
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [application?.id, loadRfis])
 
   useEffect(() => {
     if (!application?.id) return
@@ -154,11 +217,12 @@ export default function MyApplication() {
   }
 
   const checklist = deriveChecklist(getRequirements(application.track), documents)
-  const state = resolveActionState(application, documents)
+  const state = resolveActionState(application, documents, rfis)
   const completionPct = overallDraftCompletion(application, documents)
   const canSubmitNow = canSubmit(application, documents)
   const isDraft = application.status === 'draft'
-  const actionMode = ['draft_profile', 'draft_kyc', 'offer_issued', 'fee_due'].includes(state)
+  const actionMode = ['draft_profile', 'draft_kyc', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
+  const openRfiCount = rfis.filter((r) => r.status === 'open').length
 
   const receivedCount = checklist.filter(
     (item) => item.status === 'received' || item.status === 'verified'
@@ -210,6 +274,60 @@ export default function MyApplication() {
     setAccepting(false)
   }
 
+  async function handleRespondRfi(rfi, response) {
+    setRespondingRfiId(rfi.id)
+    try {
+      let responsePayload
+
+      if (response.file) {
+        const path = `${application.id}/rfi-${rfi.id}-${Date.now()}-${response.file.name}`
+        const { error: uploadError } = await supabase.storage
+          .from('application-documents')
+          .upload(path, response.file)
+        if (uploadError) throw uploadError
+
+        const { data: doc, error: docError } = await supabase
+          .from('application_documents')
+          .insert({
+            application_id: application.id,
+            document_type: 'rfi_response',
+            label: response.file.name,
+            note: 'Uploaded in response to an information request',
+            storage_path: path,
+            uploaded_by: user.id,
+          })
+          .select()
+          .single()
+        if (docError) throw docError
+        responsePayload = { document_id: doc.id, label: response.file.name }
+      } else {
+        responsePayload = { value: response.value }
+      }
+
+      const { error: updateError } = await supabase
+        .from('information_requests')
+        .update({
+          status: 'responded',
+          responded_at: new Date().toISOString(),
+          response_payload: responsePayload,
+        })
+        .eq('id', rfi.id)
+      if (updateError) throw updateError
+
+      await supabase.from('application_events').insert({
+        application_id: application.id,
+        actor_id: user.id,
+        actor_role: 'borrower',
+        event_type: 'rfi',
+        payload: { action: 'responded', prompt: rfi.prompt },
+      })
+      await loadRfis()
+    } catch (error) {
+      console.error('[MyApplication] RFI response failed:', error.message)
+    }
+    setRespondingRfiId(null)
+  }
+
   const dateLine = isDraft
     ? `Started ${new Date(application.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
     : `Submitted ${new Date(application.submitted_at ?? application.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
@@ -231,7 +349,11 @@ export default function MyApplication() {
         </div>
         {actionMode ? (
           <span className={styles.pillAction}>
-            {isDraft ? `Action required · Draft ${completionPct}% complete` : 'Action required'}
+            {isDraft
+              ? `Action required · Draft ${completionPct}% complete`
+              : state === 'rfi_open'
+                ? `Action required · ${openRfiCount} item${openRfiCount === 1 ? '' : 's'} requested`
+                : 'Action required'}
           </span>
         ) : (
           <span className={styles.pillMonitor}>
@@ -260,9 +382,12 @@ export default function MyApplication() {
           canSubmitNow={canSubmitNow}
           submitting={submitting}
           accepting={accepting}
+          rfis={rfis}
+          respondingRfiId={respondingRfiId}
           onResume={(section) => setFormSection(section)}
           onSubmit={handleSubmit}
           onAcceptOffer={handleAcceptOffer}
+          onRespondRfi={handleRespondRfi}
         />
       )}
 

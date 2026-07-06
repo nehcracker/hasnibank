@@ -231,3 +231,87 @@
   color: var(--color-gold-soft);
   margin: 0;
 }
+
+/* ── Information requests (rfi_open) ────────────────────── */
+.rfiList {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rfiItem,
+.rfiItemSent {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.rfiItem { border-color: var(--color-gold); }
+
+.rfiItemSent { opacity: 0.75; }
+
+.rfiPrompt {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-1);
+  white-space: pre-line;
+}
+
+.rfiMeta {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.rfiItemSent .rfiMeta { margin-bottom: 0; }
+
+.rfiAnswerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.rfiAnswerInput {
+  flex: 1;
+  min-width: 180px;
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.uploadControl {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.uploadControlLabel {
+  display: inline-block;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  transition: var(--transition-fast);
+}
+
+.uploadControl:hover .uploadControlLabel { background: var(--color-gold-soft); }
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}

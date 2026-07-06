@@ -66,14 +66,22 @@ export function canSubmit(app, documents) {
 /**
  * Resolves which ActionCard state applies.
  *
- * @returns {'draft_profile'|'draft_kyc'|'in_review'|'offer_issued'|'fee_due'|'funded'}
+ * Open information requests outrank every post-draft state: the applicant
+ * owes a response, so the card switches to action mode until staff resolve
+ * or the applicant responds.
+ *
+ * @param {Array} rfis - information_requests rows for the application
+ * @returns {'draft_profile'|'draft_kyc'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'}
  */
-export function resolveActionState(app, documents) {
+export function resolveActionState(app, documents, rfis = []) {
   const status = app?.status
   if (status === 'draft') {
     return profileCompletion(app?.business_profile) < 100
       ? 'draft_profile'
       : 'draft_kyc'
+  }
+  if (rfis.some((r) => r.status === 'open')) {
+    return 'rfi_open'
   }
   if (['submitted', 'kyc_verification', 'credit_assessment', 'funder_matching'].includes(status)) {
     return 'in_review'

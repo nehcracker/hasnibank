@@ -145,3 +145,55 @@ test('funded shows close-out with export link', () => {
     '/dashboard/export'
   )
 })
+
+// ── rfi_open (Phase C) ────────────────────────────────────────────────────────
+
+const OPEN_RFIS = [
+  {
+    id: 'r-1', prompt: 'Provide your latest tax clearance certificate.',
+    response_type: 'document', status: 'open', due_date: '2026-07-20',
+  },
+  {
+    id: 'r-2', prompt: 'Confirm your audited annual revenue figure.',
+    response_type: 'figure', status: 'open', due_date: null,
+  },
+]
+
+test('rfi_open titles with the open item count and renders one row per open RFI', () => {
+  setup({
+    state: 'rfi_open',
+    application: makeApp({ status: 'credit_assessment' }),
+    rfis: OPEN_RFIS,
+  })
+  expect(
+    screen.getByText(/the assessment team has requested 2 items/i)
+  ).toBeInTheDocument()
+  expect(screen.getByText(/latest tax clearance certificate/i)).toBeInTheDocument()
+  expect(screen.getByText(/audited annual revenue figure/i)).toBeInTheDocument()
+})
+
+test('rfi_open renders the response control matching each request type', () => {
+  setup({
+    state: 'rfi_open',
+    application: makeApp({ status: 'credit_assessment' }),
+    rfis: OPEN_RFIS,
+  })
+  // document type gets an upload control; figure gets an inline field + send
+  expect(screen.getByLabelText(/upload response/i)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /send response/i })).toBeInTheDocument()
+})
+
+test('rfi_open shows responded requests as sent and awaiting review', () => {
+  setup({
+    state: 'rfi_open',
+    application: makeApp({ status: 'credit_assessment' }),
+    rfis: [
+      ...OPEN_RFIS,
+      {
+        id: 'r-3', prompt: 'Provide the shareholder register.',
+        response_type: 'document', status: 'responded',
+      },
+    ],
+  })
+  expect(screen.getByText(/sent · awaiting review/i)).toBeInTheDocument()
+})

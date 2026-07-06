@@ -179,6 +179,29 @@ describe('resolveActionState', () => {
   test('funded is funded', () => {
     expect(resolveActionState(app({ status: 'funded' }), [])).toBe('funded')
   })
+
+  // Phase C: open information requests force action mode past draft
+  const openRfi = { id: 'r-1', status: 'open' }
+
+  test.each([
+    'submitted', 'kyc_verification', 'credit_assessment', 'funder_matching',
+    'term_sheet', 'offer_issued', 'offer_accepted', 'fee_payment', 'funded',
+  ])('%s with an open RFI is rfi_open', (status) => {
+    expect(resolveActionState(app({ status }), [], [openRfi])).toBe('rfi_open')
+  })
+
+  test('draft with an open RFI keeps its draft state', () => {
+    expect(resolveActionState(app(), [], [openRfi])).toBe('draft_profile')
+  })
+
+  test('responded and resolved RFIs do not force action mode', () => {
+    const rfis = [{ id: 'a', status: 'responded' }, { id: 'b', status: 'resolved' }]
+    expect(resolveActionState(app({ status: 'credit_assessment' }), [], rfis)).toBe('in_review')
+  })
+
+  test('omitting the rfis argument keeps prior behaviour', () => {
+    expect(resolveActionState(app({ status: 'credit_assessment' }), [])).toBe('in_review')
+  })
 })
 
 // ── phaseFor ──────────────────────────────────────────────────────────────────
