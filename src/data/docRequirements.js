@@ -9,9 +9,10 @@
 
 /**
  * When false, "verified" is never returned by deriveChecklist.
- * Flip to true once staff-verification events are wired in Supabase.
+ * Enabled in Phase C: staff verify documents from the admin right rail,
+ * which stamps verified_at/verified_by on application_documents.
  */
-export const VERIFICATION_ENABLED = false
+export const VERIFICATION_ENABLED = true
 
 // ── Requirements data ─────────────────────────────────────────────────────────
 
@@ -131,10 +132,11 @@ export function getRequirements(track) {
  * Status values:
  *  - 'outstanding' — no matching document found
  *  - 'received'    — matching document uploaded
- *  - 'verified'    — matching document AND verified (only when VERIFICATION_ENABLED is true)
+ *  - 'verified'    — matching document with a staff verified_at stamp
+ *                    (only when VERIFICATION_ENABLED is true)
  *
  * @param {Array<{ type: string, label: string, description: string }>} requirements
- * @param {Array<{ document_type?: string, label?: string, note?: string }>} documents
+ * @param {Array<{ document_type?: string, label?: string, verified_at?: string }>} documents
  * @returns {Array<{ type: string, label: string, description: string, status: string }>}
  */
 export function deriveChecklist(requirements, documents) {
@@ -149,7 +151,7 @@ export function deriveChecklist(requirements, documents) {
       return { ...req, status: 'outstanding' }
     }
 
-    if (VERIFICATION_ENABLED && match.note && /verif/i.test(match.note)) {
+    if (VERIFICATION_ENABLED && match.verified_at) {
       return { ...req, status: 'verified' }
     }
 

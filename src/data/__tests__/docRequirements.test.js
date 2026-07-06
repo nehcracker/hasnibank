@@ -93,25 +93,32 @@ describe('deriveChecklist', () => {
   })
 })
 
-// ── VERIFICATION_ENABLED = false ──────────────────────────────────────────────
+// ── VERIFICATION_ENABLED = true (Phase C) ─────────────────────────────────────
 
 describe('VERIFICATION_ENABLED', () => {
   it('is exported as a boolean', () => {
     expect(typeof VERIFICATION_ENABLED).toBe('boolean')
   })
 
-  it('is false (staff verification not yet live)', () => {
-    expect(VERIFICATION_ENABLED).toBe(false)
+  it('is true (staff verify documents from the admin right rail)', () => {
+    expect(VERIFICATION_ENABLED).toBe(true)
   })
 
-  it('no item ever derives verified status when VERIFICATION_ENABLED is false', () => {
+  it('a document with verified_at derives verified status', () => {
     const reqs = getRequirements('project')
-    // Provide docs for every requirement with a note hinting verification
     const docs = reqs.map((r) => ({
       document_type: r.type,
-      note: 'verified by analyst',
+      verified_at: '2026-07-06T12:00:00Z',
     }))
     const result = deriveChecklist(reqs, docs)
+    expect(result.every((r) => r.status === 'verified')).toBe(true)
+  })
+
+  it('a document without verified_at stays received', () => {
+    const reqs = getRequirements('project')
+    const docs = [{ document_type: reqs[0].type }]
+    const result = deriveChecklist(reqs, docs)
+    expect(result[0].status).toBe('received')
     expect(result.some((r) => r.status === 'verified')).toBe(false)
   })
 })

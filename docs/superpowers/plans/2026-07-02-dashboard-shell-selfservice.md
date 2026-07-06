@@ -4,6 +4,7 @@
 
 **Date:** 2026-07-02
 **Updated:** 2026-07-05 — adds **Phase B: My Application redesign** (Tasks 14–19). Phase A tasks (1–13) may already be executed; verify checkboxes against the repo before re-running any of them.
+**Updated:** 2026-07-06 — adds **Phase C: staff assessment workspace** (Tasks 20–28): admin application detail rebuilt around four phase tabs, pillar findings with internal/visible split, information requests (RFIs), warn-with-override stage gates, extended intake, versioned offer builder, and disbursement scheduling. Reference mockup approved 2026-07-06.
 **Goal:** Replace the single-page borrower dashboard with a persistent shell (collapsible sidebar + topbar + routed centre content), a stable Client ID, an amortisation/repayment modelling suite (estimator, actual schedule, DSCR, scenario comparison), an eligibility self-check, a per-track document requirements checklist, per-stage SLA display, realtime updates, and an application PDF export. **Phase B** then rebuilds My Application as a self-service workspace: a draft application state, a stage-aware action card that always names the borrower's next move, a business profile + KYC completion flow that new signups land in directly, a condensed four-phase progress rail, and fixes for three visual defects. Every feature exists to let SME borrowers and project sponsors self-serve instead of contacting staff.
 
 **Architecture:** `/dashboard` becomes a nested layout route. `DashboardLayout.jsx` renders `Sidebar` + `Topbar` + `<Outlet>`; the marketing `Navbar`/`Footer` are suppressed for `/dashboard/*`. All child routes remain behind `ProtectedRoute requiredRole="borrower"`. The amortisation engine is a pure JS module (`src/lib/amortisation.js`) shared by the estimator, the actual-schedule view, DSCR, and scenario comparison — fully unit-tested, no React inside. Panels already specified in the loan-wizard plan (status tracker, documents, messages, fees — Phases 2–5) mount into shell routes via thin wrapper pages; this plan builds the shell and integration points, not those panels.
@@ -25,6 +26,10 @@
 | Business profile storage (Phase B) | `business_profile` jsonb on `applications` (not a separate table) | One row per applicant already enforced; sections + progress live together; overridable to a `business_profiles` table if relational queries on it are ever needed |
 | Draft state (Phase B) | Add `'draft'` to the `applications.status` check constraint; `submitted_at` column added | Application becomes the borrower's workspace before submission |
 | Post-signup landing (Phase B) | Profile completion → `/dashboard/start` (track + amount) → draft created → `/dashboard/application` in action mode | Replaces mounting `ApplicationWizard` inline on the dashboard |
+| Offer storage (Phase C) | Separate `offers` table, versioned, one active per application | Renegotiation history preserved (FFHC deposit-restructure pattern); overridable to jsonb array if table sprawl is a concern |
+| Stage gate (Phase C) | Warn, never block, when critical findings or open RFIs remain; override writes an `application_events` entry | Staff sometimes advance judgmentally; the override must be auditable |
+| Internal vs borrower-visible split (Phase C) | Hard table split: internal content in staff-only-RLS tables; borrower-visible statements in separate borrower-readable tables | Row-level security cannot hide columns; a shared table risks leaking internal credit notes |
+| Assessment score (Phase C) | Derived client-side from findings rollup, no stored column | Single source of truth; a stored copy would drift |
 
 ---
 
@@ -91,6 +96,19 @@
 | `src/pages/dashboard/__tests__/ActionCard.test.jsx` | State selection per status/data completeness (Phase B) |
 | `src/lib/__tests__/applicationState.test.js` | Pure helpers: completion %, submission gate, action-state resolver (Phase B) |
 | `src/lib/applicationState.js` | Pure helpers shared by ActionCard/Overview/pill (Phase B) |
+| `sql/phase3c-assessment.sql` | Findings, finding notices, RFIs, internal notes, offers, disbursements, document verification columns, `required_sections` (Phase C) |
+| `src/pages/admin/ApplicationWorkspace.jsx` | Rebuilt `/admin/applications/:id`: header band, phase tabs, right rail (Phase C) |
+| `src/pages/admin/HeaderBand.jsx` | Applicant summary, editable score chip (rollup), open-RFI counter, StageControl slot (Phase C) |
+| `src/pages/admin/RightRail.jsx` | Internal notes, document list with Verify actions, activity feed — persistent across tabs (Phase C) |
+| `src/pages/admin/tabs/ApplicationTab.jsx` | Field-versus-evidence consistency view + extended intake toggles (Phase C) |
+| `src/pages/admin/tabs/AssessmentTab.jsx` | Findings panel by pillar + RFI list + stage-gate banner (Phase C) |
+| `src/pages/admin/tabs/OfferTab.jsx` | Structured offer builder, version history, printable offer letter, expiry (Phase C) |
+| `src/pages/admin/tabs/FundingTab.jsx` | Disbursement tranches + dated repayment schedule (Phase C) |
+| `src/pages/admin/FindingForm.jsx` | Pillar, severity, score contribution, internal note, optional borrower-visible statement, optional linked RFI (Phase C) |
+| `src/pages/admin/RfiForm.jsx` | Prompt, response type (document/text/figure), due date (Phase C) |
+| `src/lib/assessment.js` | Pure: pillar rollup → score /10, gate check (`criticalOpen`, `rfisOpen`), consistency markers (Phase C) |
+| `src/lib/__tests__/assessment.test.js` | Rollup math, gate logic (Phase C) |
+| `src/pages/admin/__tests__/AssessmentTab.test.jsx` | Findings render, visible/internal separation, gate banner states (Phase C) |
 
 ### Modified files
 
@@ -105,6 +123,13 @@
 | `src/pages/dashboard/Overview.jsx` | Phase B: service cards link to `/dashboard/start?track=<id>`; draft summary card shows "Draft, X% complete · Resume"; wizard no longer mounts inline |
 | `src/layouts/Topbar.jsx` | Phase B defect fix: company fallback (Task 19) |
 | `src/layouts/Sidebar.jsx` | Phase B defect fix: label "Repayments" (Task 19) |
+| `src/pages/admin/AdminApplication.jsx` | Phase C: retired; logic migrates into `ApplicationWorkspace` and tabs |
+| `src/pages/admin/StageControl.jsx` (or equivalent) | Phase C: gate check before advance; override confirmation + event logging |
+| `src/lib/amortisation.js` | Phase C: `buildSchedule` accepts optional `startDate` and emits `dueDate` per period, anchored to first disbursement |
+| `src/lib/applicationState.js` | Phase C: `resolveActionState` gains `rfi_open` (open RFIs force action mode even during review stages) |
+| `src/pages/dashboard/ActionCard.jsx` | Phase C: `rfi_open` state — "N items requested by the assessment team", each resolvable in place (text answer or upload) |
+| `src/pages/dashboard/MyApplication.jsx` | Phase C: borrower sees active offer summary from `offers` and dated schedule once disbursed |
+| `src/data/docRequirements.js` | Phase C: flip `VERIFICATION_ENABLED` to true once verify actions ship (Task 21) |
 
 ---
 
@@ -520,6 +545,259 @@ phaseFor(status) -> 1..4  (per PHASES table above)
 - [ ] **Step 4:** Sweep all UI copy added in Phase B for em dashes and "loan application" phrasing — both are violations
 - [ ] **Step 5:** `npx vitest run` all green; `npm run build` zero errors; `git push origin main`
 - [ ] **Step 6:** Commit — `fix: topbar company fallback, sidebar label, SLA placement`
+
+---
+
+# Phase C — Staff assessment workspace
+
+**Design principle:** the admin detail view answers "what do I need to decide, and what am I missing to decide it". Four phase tabs (Application · Assessment · Offer · Funding) mirror the borrower's phases; a persistent right rail (internal notes, documents with verify, activity) stays visible for cross-referencing. **Internal and borrower-visible content are different objects with different RLS — never one table with a visibility flag.** All Phase C routes remain behind `ProtectedRoute requiredRole="staff"`.
+
+**Pillar weights (reuse `eligibilityModel.js` constants):** Financial records 2.5 · Collateral and security 2.0 · Documentation 2.0 · Compliance 1.5 · Capacity 2.0 — total 10.
+
+---
+
+## Task 20: SQL — `sql/phase3c-assessment.sql`
+
+```sql
+-- 1. Findings: STAFF-ONLY. Internal notes never borrower-readable.
+create table public.assessment_findings (
+  id             uuid primary key default gen_random_uuid(),
+  application_id uuid not null references public.applications(id),
+  pillar         text not null check (pillar in
+                   ('financial_records','collateral','documentation','compliance','capacity')),
+  severity       text not null check (severity in
+                   ('informational','requires_improvement','critical')),
+  score          numeric not null check (score >= 0),
+  internal_note  text,
+  created_by     uuid not null references public.profiles(id),
+  status         text not null default 'open' check (status in ('open','resolved')),
+  created_at     timestamptz default now()
+);
+alter table public.assessment_findings enable row level security;
+create policy "Staff full access on findings" on public.assessment_findings
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 2. Finding notices: the borrower-visible statement, split table.
+create table public.finding_notices (
+  id             uuid primary key default gen_random_uuid(),
+  finding_id     uuid not null references public.assessment_findings(id),
+  application_id uuid not null references public.applications(id),
+  statement      text not null,
+  created_at     timestamptz default now()
+);
+alter table public.finding_notices enable row level security;
+create policy "Borrowers read own notices" on public.finding_notices
+  for select using (exists (select 1 from public.applications a
+    where a.id = application_id and a.applicant_id = auth.uid()));
+create policy "Staff full access on notices" on public.finding_notices
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 3. Information requests (RFIs)
+create table public.information_requests (
+  id             uuid primary key default gen_random_uuid(),
+  application_id uuid not null references public.applications(id),
+  finding_id     uuid references public.assessment_findings(id),
+  prompt         text not null,
+  response_type  text not null check (response_type in ('document','text','figure')),
+  due_date       date,
+  status         text not null default 'open' check (status in
+                   ('open','responded','resolved','rejected')),
+  response_payload jsonb,
+  responded_at   timestamptz,
+  resolution_note text,
+  created_by     uuid not null references public.profiles(id),
+  created_at     timestamptz default now()
+);
+alter table public.information_requests enable row level security;
+create policy "Borrowers read own rfis" on public.information_requests
+  for select using (exists (select 1 from public.applications a
+    where a.id = application_id and a.applicant_id = auth.uid()));
+create policy "Borrowers respond to open rfis" on public.information_requests
+  for update using (
+    status = 'open' and exists (select 1 from public.applications a
+      where a.id = application_id and a.applicant_id = auth.uid()))
+  with check (status = 'responded');
+create policy "Staff full access on rfis" on public.information_requests
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 4. Internal notes: STAFF-ONLY
+create table public.internal_notes (
+  id             uuid primary key default gen_random_uuid(),
+  application_id uuid not null references public.applications(id),
+  body           text not null,
+  created_by     uuid not null references public.profiles(id),
+  created_at     timestamptz default now()
+);
+alter table public.internal_notes enable row level security;
+create policy "Staff full access on internal notes" on public.internal_notes
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 5. Offers: versioned; at most one active per application
+create table public.offers (
+  id             uuid primary key default gen_random_uuid(),
+  application_id uuid not null references public.applications(id),
+  version        int  not null default 1,
+  terms          jsonb not null, -- offer_terms shape + fees[], conditions_precedent[], covenants[]
+  valid_until    date,
+  status         text not null default 'draft' check (status in
+                   ('draft','issued','superseded','accepted','declined','expired')),
+  accepted_at    timestamptz,
+  acceptance_meta jsonb, -- { declaration: text, ip: text }
+  created_by     uuid not null references public.profiles(id),
+  created_at     timestamptz default now(),
+  unique (application_id, version)
+);
+alter table public.offers enable row level security;
+create policy "Borrowers read issued offers" on public.offers
+  for select using (status <> 'draft' and exists (select 1 from public.applications a
+    where a.id = application_id and a.applicant_id = auth.uid()));
+create policy "Borrowers accept issued offers" on public.offers
+  for update using (
+    status = 'issued' and exists (select 1 from public.applications a
+      where a.id = application_id and a.applicant_id = auth.uid()))
+  with check (status = 'accepted');
+create policy "Staff full access on offers" on public.offers
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 6. Disbursements
+create table public.disbursements (
+  id             uuid primary key default gen_random_uuid(),
+  application_id uuid not null references public.applications(id),
+  tranche_no     int  not null,
+  amount         numeric not null,
+  planned_date   date,
+  actual_date    date,
+  conditions     jsonb,
+  status         text not null default 'planned' check (status in
+                   ('planned','conditions_pending','disbursed')),
+  created_at     timestamptz default now(),
+  unique (application_id, tranche_no)
+);
+alter table public.disbursements enable row level security;
+create policy "Borrowers read own disbursements" on public.disbursements
+  for select using (exists (select 1 from public.applications a
+    where a.id = application_id and a.applicant_id = auth.uid()));
+create policy "Staff full access on disbursements" on public.disbursements
+  for all using (exists (select 1 from public.profiles
+    where id = auth.uid() and role = 'staff'));
+
+-- 7. Document verification + extended intake
+alter table public.application_documents
+  add column if not exists verified_at timestamptz,
+  add column if not exists verified_by uuid references public.profiles(id);
+alter table public.applications
+  add column if not exists required_sections text[] not null default '{}';
+```
+
+- [ ] **Step 1:** Adjust table/column names above to the actual Phase 2/3 wizard schema if they differ (`application_documents` in particular); verify FK targets exist
+- [ ] **Step 2:** Run in Supabase SQL Editor; enable realtime on `information_requests` and `offers` (Database → Replication)
+- [ ] **Step 3:** RLS verification with a borrower session: can read `finding_notices` and open RFIs, can update an open RFI only to `responded`, CANNOT select from `assessment_findings` or `internal_notes`, cannot see `draft` offers
+- [ ] **Step 4:** Commit — `chore: assessment, rfi, offers, disbursements schema with split RLS`
+
+---
+
+## Task 21: Admin workspace shell — header band, tabs, right rail
+
+**Files:** Create `ApplicationWorkspace.jsx`, `HeaderBand.jsx`, `RightRail.jsx`, tab stubs. Retire `AdminApplication.jsx` (its content becomes the initial `ApplicationTab`).
+
+- [ ] **Step 1:** `ApplicationWorkspace` fetches the application + related rows; layout: header band full width, tab strip (gold underline on active, default tab = phase of current status via `phaseFor`), centre `1fr` + right rail 280px (rail stacks below centre ≤1024px)
+- [ ] **Step 2:** `HeaderBand`: name, company, `client_ref`, track, amount, submitted date; score chip (from Task 22 rollup, shows "—" until findings exist); gold "N RFIs open" counter; existing `StageControl` mounted on the right
+- [ ] **Step 3:** `RightRail`: internal notes list + add box labelled "staff only" (writes `internal_notes`); document list with per-item Verify button setting `verified_at`/`verified_by`; activity feed from `application_events`. Flip `VERIFICATION_ENABLED` to true and confirm the borrower checklist now renders the verified state
+- [ ] **Step 4:** Build passes; all four tabs route (stubs allowed); commit — `feat: admin application workspace shell with persistent right rail`
+
+---
+
+## Task 22: Assessment tab — findings, scoring, gate (TDD)
+
+**Files:** Create `src/lib/assessment.js` + test, `AssessmentTab.jsx` + test, `FindingForm.jsx`
+
+**`assessment.js` contract:**
+```
+rollupScore(findings) -> { total: 0..10, byPillar: { pillar: { score, max } } }
+  Sum of finding scores capped at pillar max; pillars with no findings
+  default to full marks MINUS nothing — they display as "not yet assessed"
+  and contribute 0 until a finding (even informational, full score) exists.
+gateCheck(findings, rfis) -> { criticalOpen: int, rfisOpen: int, clear: boolean }
+```
+
+- [ ] **Step 1 (failing tests):** rollup fixtures (empty, partial, capped); gateCheck across states; AssessmentTab renders internal note and visible statement in visually distinct blocks (visible statement carries the gold-border class), collapsed pillar summaries, RFI lifecycle rows
+- [ ] **Step 2:** `FindingForm`: pillar select, severity, score (0 to pillar max), internal note, optional borrower-visible statement (inserts `finding_notices` row), optional "create linked RFI" toggle revealing `RfiForm` inline. Saving writes finding (+ notice) (+ RFI) and an `application_events` entry
+- [ ] **Step 3:** AssessmentTab assembles: findings grouped by pillar (expanded when critical/requires_improvement, collapsed score chips otherwise), RFI section with per-status actions (open: edit/cancel; responded: view response → Resolve with note / Reject with reason → status back to open with the reason appended to prompt), gate banner when `!gateCheck.clear`
+- [ ] **Step 4:** Header score chip wired to `rollupScore`
+- [ ] **Step 5:** Tests + build; commit — `feat: assessment findings, pillar scoring, rfi lifecycle`
+
+---
+
+## Task 23: Borrower-side RFIs — ActionCard `rfi_open`
+
+**Files:** Modify `applicationState.js` + tests, `ActionCard.jsx` + tests, `MyApplication.jsx`
+
+- [ ] **Step 1 (failing tests):** `resolveActionState` returns `'rfi_open'` whenever open RFIs exist and status is past draft (RFIs outrank `in_review`); ActionCard `rfi_open` renders one row per open RFI
+- [ ] **Step 2:** ActionCard `rfi_open`: title "The assessment team has requested {N} items", each RFI row = prompt, due date, why-wording, and the response control by type (document → upload target writing to documents + `response_payload` doc ref; text/figure → inline field). Submit sets `status='responded'`, `responded_at`, `response_payload`; writes an event. Status pill: gold "Action required · {N} items requested"
+- [ ] **Step 3:** Responded RFIs show muted "Sent · awaiting review"; resolved ones disappear from the card (visible in activity). Realtime: subscribe to `information_requests` for the application so staff-created RFIs appear without refresh
+- [ ] **Step 4:** Tests + build; commit — `feat: borrower rfi response flow in action card`
+
+---
+
+## Task 24: Stage gate — warn with logged override
+
+**Files:** Modify `StageControl.jsx` (or the stage-advance component built by the wizard Phase 2 plan)
+
+- [ ] **Step 1:** Before advancing, run `gateCheck`; if not clear, show confirm dialog: "Advancing with {X} critical finding(s) and {Y} open request(s) will be logged as an override." Buttons: Cancel / Advance anyway
+- [ ] **Step 2:** On override, write `application_events` entry `event_type: 'stage_override'` with payload `{ from, to, critical_open, rfis_open }` in addition to the normal `status_change` event
+- [ ] **Step 3:** Build; commit — `feat: stage gate warning with audited override`
+
+---
+
+## Task 25: Application tab — consistency view + extended intake
+
+**Files:** Create `ApplicationTab.jsx`. Modify `BusinessProfileForm.jsx`, `ActionCard.jsx`
+
+**Extended sections (staff-toggleable via `required_sections`):** `shareholding` (directors, ownership %, PEP self-declaration) · `collateral` (type, ownership evidence, estimated value) · `banking` (3-year revenue, existing facilities with balances and repayments) · `track_record` (management experience). Section field definitions live in a `src/data/extendedSections.js` config.
+
+- [ ] **Step 1:** ApplicationTab left column: all submitted profile + fields values grouped by section. Right column: evidence pairing — each key field lists the document type expected to evidence it (declared revenue ↔ bank statements, registration ↔ certificate, collateral ↔ ownership evidence) with a three-state marker per pair (consistent `--color-success` / inconsistent `--color-error` / unverified muted) set by staff click and persisted in an `application_events` payload (no new table; latest event wins)
+- [ ] **Step 2:** Extended intake toggles: checkbox per extended section writing `required_sections`; toggling on makes the section appear in the borrower's Part 1 list (BusinessProfileForm reads `required_sections` and appends matching sections from `extendedSections.js`; completion math extends accordingly). Proportionality note in UI: "Require only what this transaction size justifies"
+- [ ] **Step 3:** Borrower ActionCard reflects new required sections immediately (realtime on the applications row already exists)
+- [ ] **Step 4:** Build; commit — `feat: consistency review and staff-toggled extended intake`
+
+---
+
+## Task 26: Offer tab — versioned builder, letter, in-portal acceptance
+
+**Files:** Create `OfferTab.jsx`. Modify borrower `ActionCard.jsx` (`offer_issued` now reads from `offers`), `ActualSchedule.jsx` (reads active offer terms), printable letter reuses the print-stylesheet approach
+
+- [ ] **Step 1:** Builder form → `offers.terms`: principal (prefill `amount_sought`), currency, rate, term, frequency, structure, grace, `fees[]` (label + amount + timing: on_signing/on_delivery/on_disbursement/success_pct), `conditions_precedent[]` (text items), `covenants[]`, `valid_until`. Live preview panel: payment amount + total cost via `buildSchedule`
+- [ ] **Step 2:** Lifecycle: Save = `draft` (borrower cannot see); Issue = `status='issued'` + event + supersede any prior `issued` offer (`status='superseded'`); new version = copy of latest with `version + 1`. Version history list with status chips
+- [ ] **Step 3:** Borrower side: ActionCard `offer_issued` shows active offer summary (amount, rate, term, valid-until), View letter (print-styled), link to dated schedule, and Accept: declaration checkbox ("I have read and accept the terms of this offer on behalf of {company}") → update `status='accepted'`, `accepted_at`, `acceptance_meta` → events. Expired: a small client check flips display to "Offer expired, contact via Messages" when `valid_until` past and status still `issued` (no cron; staff reissue)
+- [ ] **Step 4:** Keep `applications.offer_terms` in sync on issue (single `update` alongside the offer insert) so Phase A's ActualSchedule keeps working unchanged
+- [ ] **Step 5:** Build; commit — `feat: versioned offer builder with in-portal acceptance`
+
+---
+
+## Task 27: Funding tab — disbursements and the dated formula
+
+**Files:** Create `FundingTab.jsx`. Modify `src/lib/amortisation.js` + tests, borrower `ActualSchedule.jsx`
+
+- [ ] **Step 1 (failing tests):** `buildSchedule({ ..., startDate: '2026-08-01' })` emits `dueDate` per period advancing by frequency (monthly → 1st of each month from start; quarterly → +3 months); no `startDate` → `dueDate` null and all Phase A tests still pass unchanged
+- [ ] **Step 2:** FundingTab: tranche table (add/edit: amount, planned date, linked conditions from the accepted offer's `conditions_precedent`, status), "Mark disbursed" sets `actual_date` + event; totals row validates Σ tranches = offer principal, warning when short
+- [ ] **Step 3:** First `disbursed` tranche's `actual_date` anchors the schedule: staff and borrower ActualSchedule render dated periods from `buildSchedule(terms, startDate)`
+- [ ] **Step 4:** Copy rule for every Funding-phase string: facilitation language only — "disbursement scheduled by the funder", "facilitated through Hasni Bank"; never "we will disburse" or any direct-lending claim
+- [ ] **Step 5:** Tests + build; commit — `feat: disbursement tranches and date-anchored repayment schedule`
+
+---
+
+## Task 28: Phase C verification + push
+
+- [ ] **Step 1:** `npx vitest run` all green; `npm run build` zero errors
+- [ ] **Step 2:** RLS sweep repeated from Task 20 Step 3 against the built UI (borrower session must never receive `assessment_findings` or `internal_notes` rows in any network response)
+- [ ] **Step 3:** End-to-end manual pass: staff records critical finding + RFI → borrower responds in ActionCard → staff resolves → gate clears → staff issues offer v1, reissues v2 → borrower accepts v2 → staff schedules and disburses tranche 1 → both sides see dated schedule
+- [ ] **Step 4:** Copy sweep: no em dashes, no "loan application", no direct-lending claims in Funding copy
+- [ ] **Step 5:** `git push origin main`
 
 ---
 

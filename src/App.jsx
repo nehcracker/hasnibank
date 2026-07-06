@@ -22,7 +22,7 @@ import SignupProfile from '@/pages/auth/SignupProfile'
 
 // Admin pages
 import Admin from '@/pages/Admin'
-import AdminApplication from '@/pages/admin/AdminApplication'
+import ApplicationWorkspace from '@/pages/admin/ApplicationWorkspace'
 
 // Dashboard shell
 import DashboardLayout from '@/layouts/DashboardLayout'
@@ -77,7 +77,7 @@ function AppInner() {
             <ProtectedRoute requiredRole="staff"><Admin /></ProtectedRoute>
           } />
           <Route path="/admin/applications/:id" element={
-            <ProtectedRoute requiredRole="staff"><AdminApplication /></ProtectedRoute>
+            <ProtectedRoute requiredRole="staff"><ApplicationWorkspace /></ProtectedRoute>
           } />
 
           {/* ── Borrower dashboard (nested routes) ─────── */}
