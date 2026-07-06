@@ -18,7 +18,7 @@ function formatDate(value) {
  * identity, transaction facts, assessment score chip, open-RFI counter,
  * and the stage control on the right.
  */
-export default function HeaderBand({ application, score, openRfiCount, user, onStatusUpdated }) {
+export default function HeaderBand({ application, score, openRfiCount, gate, user, onStatusUpdated }) {
   const applicant = application.applicant ?? {}
   const submitted = formatDate(application.submitted_at)
   const started = formatDate(application.created_at)
@@ -58,6 +58,7 @@ export default function HeaderBand({ application, score, openRfiCount, user, onS
           currentStatus={application.status}
           userId={user.id}
           onUpdated={onStatusUpdated}
+          gate={gate}
         />
       </div>
     </div>

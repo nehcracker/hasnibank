@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { phaseFor } from '@/lib/applicationState'
-import { rollupScore } from '@/lib/assessment'
+import { rollupScore, gateCheck } from '@/lib/assessment'
 import HeaderBand from './HeaderBand'
 import RightRail from './RightRail'
 import ApplicationTab from './tabs/ApplicationTab'
@@ -124,6 +124,7 @@ export default function ApplicationWorkspace() {
 
   const openRfiCount = related.rfis.filter((r) => r.status === 'open').length
   const { total: score } = rollupScore(related.findings)
+  const gate = gateCheck(related.findings, related.rfis)
   const tab = activeTab ?? 'application'
 
   return (
@@ -135,6 +136,7 @@ export default function ApplicationWorkspace() {
           application={application}
           score={score}
           openRfiCount={openRfiCount}
+          gate={gate}
           user={user}
           onStatusUpdated={(newStatus) => {
             setApplication((prev) => ({ ...prev, status: newStatus }))

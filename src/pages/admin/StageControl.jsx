@@ -14,17 +14,37 @@ const STAGES = [
   { key: 'funded',            label: 'Funded' },
 ]
 
-export default function StageControl({ applicationId, currentStatus, userId, onUpdated }) {
+const CLEAR_GATE = { criticalOpen: 0, rfisOpen: 0, clear: true }
+
+export default function StageControl({
+  applicationId,
+  currentStatus,
+  userId,
+  onUpdated,
+  gate = CLEAR_GATE,
+}) {
   const [selected, setSelected] = useState(currentStatus)
   const [note, setNote] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [confirmingOverride, setConfirmingOverride] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
 
-  async function handleUpdate() {
+  function handleUpdateClick() {
+    // Warn, never block: unresolved critical findings or open requests
+    // require an explicit, audited override before the stage moves.
+    if (!gate.clear && selected !== currentStatus && !confirmingOverride) {
+      setConfirmingOverride(true)
+      return
+    }
+    performUpdate(!gate.clear && selected !== currentStatus)
+  }
+
+  async function performUpdate(isOverride) {
     setUpdating(true)
     setError(null)
     setSuccess(false)
+    setConfirmingOverride(false)
 
     const { error: updateError } = await supabase
       .from('applications')
@@ -55,6 +75,22 @@ export default function StageControl({ applicationId, currentStatus, userId, onU
       return
     }
 
+    if (isOverride) {
+      const { error: overrideError } = await supabase.from('application_events').insert({
+        application_id: applicationId,
+        actor_id: userId,
+        actor_role: 'staff',
+        event_type: 'stage_override',
+        payload: {
+          from: currentStatus,
+          to: selected,
+          critical_open: gate.criticalOpen,
+          rfis_open: gate.rfisOpen,
+        },
+      })
+      if (overrideError) console.error('Override event insert failed:', overrideError)
+    }
+
     setNote('')
     setSuccess(true)
     setUpdating(false)
@@ -68,7 +104,11 @@ export default function StageControl({ applicationId, currentStatus, userId, onU
         <select
           className={styles.stageSelect}
           value={selected}
-          onChange={(e) => { setSelected(e.target.value); setSuccess(false) }}
+          onChange={(e) => {
+            setSelected(e.target.value)
+            setSuccess(false)
+            setConfirmingOverride(false)
+          }}
         >
           {STAGES.map((s) => (
             <option key={s.key} value={s.key}>{s.label}</option>
@@ -84,13 +124,41 @@ export default function StageControl({ applicationId, currentStatus, userId, onU
           placeholder="Add a note for this stage change…"
         />
       </div>
-      <button
-        className={styles.updateBtn}
-        onClick={handleUpdate}
-        disabled={updating}
-      >
-        {updating ? 'Updating…' : 'Update Status'}
-      </button>
+
+      {confirmingOverride ? (
+        <div className={styles.overrideConfirm}>
+          <p className={styles.overrideText}>
+            Advancing with {gate.criticalOpen} critical finding
+            {gate.criticalOpen === 1 ? '' : 's'} and {gate.rfisOpen} open request
+            {gate.rfisOpen === 1 ? '' : 's'} will be logged as an override.
+          </p>
+          <div className={styles.formActions}>
+            <button
+              className={styles.updateBtn}
+              onClick={() => performUpdate(true)}
+              disabled={updating}
+            >
+              {updating ? 'Updating…' : 'Advance anyway'}
+            </button>
+            <button
+              className={styles.ghostBtn}
+              onClick={() => setConfirmingOverride(false)}
+              disabled={updating}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className={styles.updateBtn}
+          onClick={handleUpdateClick}
+          disabled={updating}
+        >
+          {updating ? 'Updating…' : 'Update Status'}
+        </button>
+      )}
+
       {error   && <p className={styles.errorMsg}>{error}</p>}
       {success && <p className={styles.successMsg}>Status updated successfully.</p>}
     </div>
