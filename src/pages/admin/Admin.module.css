@@ -397,3 +397,207 @@
   background: var(--color-gold);
   color: var(--color-navy);
 }
+
+/* ── Assessment tab ───────────────────────────────────── */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.sectionHeader .sectionTitle { margin: 0; }
+
+.gateBanner {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-gold-soft);
+  background: rgba(203, 161, 53, 0.08);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-navy);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.ghostBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.ghostBtn:hover:not(:disabled) {
+  color: var(--color-ivory);
+  border-color: var(--color-muted);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  cursor: pointer;
+}
+
+.pillarBlock {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.pillarSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  list-style: none;
+}
+
+.findingRow {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-3) 0;
+  margin-top: var(--space-3);
+}
+
+.findingMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.severityChip {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  color: var(--color-ivory);
+  white-space: nowrap;
+}
+
+.severityChip[data-severity='critical'] {
+  background: rgba(217, 83, 79, 0.15);
+  color: var(--color-error);
+}
+
+.severityChip[data-severity='requires_improvement'] {
+  background: rgba(203, 161, 53, 0.15);
+  color: var(--color-gold-soft);
+}
+
+.internalBlock,
+.visibleBlock {
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.internalBlock {
+  background: var(--color-navy);
+  border: 1px dashed var(--color-border);
+}
+
+.visibleBlock {
+  background: rgba(203, 161, 53, 0.05);
+  border: 1px solid var(--color-gold);
+}
+
+.internalBlock p,
+.visibleBlock p {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: var(--space-2) 0 0;
+}
+
+.visibleTag {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gold-soft);
+}
+
+.rfiRow {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.rfiStatusChip {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  color: var(--color-ivory);
+  white-space: nowrap;
+}
+
+.rfiStatusChip[data-status='open']      { background: rgba(203, 161, 53, 0.15); color: var(--color-gold-soft); }
+.rfiStatusChip[data-status='responded'] { background: rgba(63, 163, 122, 0.15); color: var(--color-success); }
+
+.rfiPrompt {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-2);
+  white-space: pre-line;
+}
+
+.rfiResponse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+}
+
+.rfiResponseBody {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: 0;
+  overflow-wrap: anywhere;
+}

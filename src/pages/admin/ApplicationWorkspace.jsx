@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { phaseFor } from '@/lib/applicationState'
+import { rollupScore } from '@/lib/assessment'
 import HeaderBand from './HeaderBand'
 import RightRail from './RightRail'
 import ApplicationTab from './tabs/ApplicationTab'
@@ -122,6 +123,7 @@ export default function ApplicationWorkspace() {
   }
 
   const openRfiCount = related.rfis.filter((r) => r.status === 'open').length
+  const { total: score } = rollupScore(related.findings)
   const tab = activeTab ?? 'application'
 
   return (
@@ -131,7 +133,7 @@ export default function ApplicationWorkspace() {
 
         <HeaderBand
           application={application}
-          score={null}
+          score={score}
           openRfiCount={openRfiCount}
           user={user}
           onStatusUpdated={(newStatus) => {
@@ -157,7 +159,16 @@ export default function ApplicationWorkspace() {
         <div className={styles.workspaceGrid}>
           <div>
             {tab === 'application' && <ApplicationTab application={application} />}
-            {tab === 'assessment'  && <AssessmentTab />}
+            {tab === 'assessment'  && (
+              <AssessmentTab
+                application={application}
+                findings={related.findings}
+                notices={related.notices}
+                rfis={related.rfis}
+                user={user}
+                onChanged={refreshRelated}
+              />
+            )}
             {tab === 'offer'       && <OfferTab />}
             {tab === 'funding'     && <FundingTab />}
           </div>
