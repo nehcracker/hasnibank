@@ -111,6 +111,8 @@ export default function Eligibility() {
           actor_role: 'borrower',
           event_type: 'note',
           payload: { detail: 'Fundability self-check completed' },
+        }).then(({ error: eventError }) => {
+          if (eventError) console.warn('[Eligibility] event insert failed:', eventError.message)
         })
         refresh?.()
       })

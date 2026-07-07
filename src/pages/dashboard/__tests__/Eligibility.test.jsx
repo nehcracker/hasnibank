@@ -63,6 +63,14 @@ test('completing the check on a draft application saves the result', async () =>
   expect(payload.eligibility.band).toBe('Application-ready')
   expect(payload.eligibility.completed_at).toBeTruthy()
   expect(Object.keys(payload.eligibility.answers)).toHaveLength(10)
+  expect(mockUpdate).toHaveBeenCalledTimes(1)
+  await waitFor(() => expect(mockInsert).toHaveBeenCalledTimes(1))
+  const event = mockInsert.mock.calls[0][0]
+  expect(event.event_type).toBe('note')
+  expect(event.actor_role).toBe('borrower')
+  expect(event.application_id).toBe('app-1')
+  expect(event.actor_id).toBe('user-1')
+  expect(event.payload.detail).toBe('Fundability self-check completed')
 })
 
 test('no application means no save', async () => {
