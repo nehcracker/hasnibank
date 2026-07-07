@@ -87,6 +87,37 @@ describe('kycCompletion', () => {
   })
 })
 
+// ── profileCompletion with extended sections (Phase C) ───────────────────────
+
+describe('profileCompletion with required_sections', () => {
+  const FULL_BASE = {
+    progress: { registration: true, trading: true, financials: true, purpose: true },
+  }
+
+  test('base sections complete but a required extended section pending is under 100', () => {
+    expect(profileCompletion(FULL_BASE, ['collateral'])).toBe(80)
+  })
+
+  test('base plus required extended section complete is 100', () => {
+    const profile = {
+      progress: { ...FULL_BASE.progress, collateral: true },
+    }
+    expect(profileCompletion(profile, ['collateral'])).toBe(100)
+  })
+
+  test('unknown keys in required_sections are ignored', () => {
+    expect(profileCompletion(FULL_BASE, ['not_a_section'])).toBe(100)
+  })
+
+  test('draft with extended section pending stays draft_profile', () => {
+    const application = app({
+      business_profile: FULL_BASE,
+      required_sections: ['banking'],
+    })
+    expect(resolveActionState(application, [])).toBe('draft_profile')
+  })
+})
+
 // ── overallDraftCompletion ────────────────────────────────────────────────────
 
 describe('overallDraftCompletion', () => {

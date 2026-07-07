@@ -6,21 +6,29 @@
  */
 
 import { getRequirements, deriveChecklist } from '@/data/docRequirements'
+import { getExtendedSections } from '@/data/extendedSections'
 import { PHASES } from '@/data/stageMeta'
 
-/** The four business-profile sections, in form order. */
+/** The four base business-profile sections, in form order. */
 export const PROFILE_SECTIONS = ['registration', 'trading', 'financials', 'purpose']
 
 /**
- * 25 points per completed section flag in business_profile.progress.
+ * Completion across the base sections plus any staff-required extended
+ * sections, from the flags in business_profile.progress. With no extended
+ * sections this is the original 25 points per section.
  *
  * @param {object|null|undefined} businessProfile
+ * @param {string[]} [requiredSections] - applications.required_sections
  * @returns {number} 0..100
  */
-export function profileCompletion(businessProfile) {
+export function profileCompletion(businessProfile, requiredSections = []) {
   const progress = businessProfile?.progress ?? {}
-  const done = PROFILE_SECTIONS.filter((s) => progress[s] === true).length
-  return done * 25
+  const sections = [
+    ...PROFILE_SECTIONS,
+    ...getExtendedSections(requiredSections).map((s) => s.key),
+  ]
+  const done = sections.filter((s) => progress[s] === true).length
+  return Math.round((done / sections.length) * 100)
 }
 
 /**
@@ -48,7 +56,7 @@ export function kycCompletion(requirements, documents) {
  * @returns {number} 0..100
  */
 export function overallDraftCompletion(app, documents) {
-  const profilePct = profileCompletion(app?.business_profile)
+  const profilePct = profileCompletion(app?.business_profile, app?.required_sections)
   const { pct: kycPct } = kycCompletion(getRequirements(app?.track), documents)
   return Math.round(profilePct * 0.6 + kycPct * 0.4)
 }
@@ -58,7 +66,7 @@ export function overallDraftCompletion(app, documents) {
  * KYC item received.
  */
 export function canSubmit(app, documents) {
-  if (profileCompletion(app?.business_profile) !== 100) return false
+  if (profileCompletion(app?.business_profile, app?.required_sections) !== 100) return false
   const { received, total } = kycCompletion(getRequirements(app?.track), documents)
   return total > 0 && received === total
 }
@@ -76,7 +84,7 @@ export function canSubmit(app, documents) {
 export function resolveActionState(app, documents, rfis = []) {
   const status = app?.status
   if (status === 'draft') {
-    return profileCompletion(app?.business_profile) < 100
+    return profileCompletion(app?.business_profile, app?.required_sections) < 100
       ? 'draft_profile'
       : 'draft_kyc'
   }

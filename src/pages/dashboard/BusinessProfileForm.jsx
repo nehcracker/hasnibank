@@ -5,6 +5,7 @@ import SmeFields from '@/pages/wizard/steps/SmeFields'
 import ProjectFields from '@/pages/wizard/steps/ProjectFields'
 import TradeFields from '@/pages/wizard/steps/TradeFields'
 import AcquisitionFields from '@/pages/wizard/steps/AcquisitionFields'
+import { getExtendedSections } from '@/data/extendedSections'
 import { SECTION_LABELS } from './ActionCard'
 import styles from './BusinessProfileForm.module.css'
 
@@ -43,8 +44,12 @@ export default function BusinessProfileForm({
   onSaved,
   onClose,
 }) {
+  // Staff can require additional intake sections; they follow the base four
+  const extendedSections = getExtendedSections(application.required_sections)
+  const allSections = [...SECTIONS, ...extendedSections.map((s) => s.key)]
+
   const [active, setActive] = useState(
-    SECTIONS.includes(initialSection) ? initialSection : 'registration'
+    allSections.includes(initialSection) ? initialSection : 'registration'
   )
   const [businessProfile, setBusinessProfile] = useState(() => ({
     registration: {},
@@ -149,6 +154,12 @@ export default function BusinessProfileForm({
       if (data.existingDebt === 'yes' && !data.debtDetail?.trim())
         e.debtDetail = 'Please describe your existing obligations'
     }
+    const extended = extendedSections.find((s) => s.key === section)
+    if (extended) {
+      for (const field of extended.fields) {
+        if (!String(data[field.name] ?? '').trim()) e[field.name] = 'Required'
+      }
+    }
     return e
   }
 
@@ -167,9 +178,9 @@ export default function BusinessProfileForm({
     setBusinessProfile(nextProfile)
     await persist()
 
-    const idx = SECTIONS.indexOf(section)
-    if (idx < SECTIONS.length - 1) {
-      setActive(SECTIONS[idx + 1])
+    const idx = allSections.indexOf(section)
+    if (idx < allSections.length - 1) {
+      setActive(allSections[idx + 1])
       setErrors({})
     } else {
       onClose?.()
@@ -183,7 +194,7 @@ export default function BusinessProfileForm({
 
   const progress = businessProfile.progress ?? {}
   const TrackFields = TRACK_FIELD_COMPONENTS[application.track] ?? SmeFields
-  const activeIdx = SECTIONS.indexOf(active)
+  const activeExtended = extendedSections.find((s) => s.key === active)
 
   const saveLabel = useMemo(() => {
     if (saveState === 'saving') return 'Saving...'
@@ -196,7 +207,7 @@ export default function BusinessProfileForm({
     <div className={styles.form}>
       {/* Section stepper */}
       <div className={styles.stepper} role="tablist" aria-label="Profile sections">
-        {SECTIONS.map((key, i) => (
+        {allSections.map((key, i) => (
           <button
             key={key}
             type="button"
@@ -371,7 +382,64 @@ export default function BusinessProfileForm({
         </div>
       )}
 
-      {activeIdx < 3 && (
+      {/* Extended sections required by the assessment team */}
+      {activeExtended && (
+        <SectionFrame title={activeExtended.label} sub={activeExtended.description}>
+          {activeExtended.fields.map((field) => (
+            <Field
+              key={field.name}
+              label={field.label}
+              error={errors[field.name]}
+            >
+              {field.type === 'textarea' ? (
+                <textarea
+                  className={styles.input}
+                  rows={3}
+                  value={businessProfile[activeExtended.key]?.[field.name] ?? ''}
+                  onChange={(e) =>
+                    setSection(activeExtended.key, { [field.name]: e.target.value })
+                  }
+                />
+              ) : field.type === 'radio' ? (
+                <div className={styles.radioGroup}>
+                  {field.options.map((v) => (
+                    <label key={v} className={styles.radioLabel}>
+                      <input
+                        type="radio"
+                        name={`${activeExtended.key}-${field.name}`}
+                        value={v}
+                        checked={businessProfile[activeExtended.key]?.[field.name] === v}
+                        onChange={() =>
+                          setSection(activeExtended.key, { [field.name]: v })
+                        }
+                      />
+                      {v === 'yes' ? 'Yes' : 'No'}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <input
+                  type={field.type === 'number' ? 'number' : 'text'}
+                  className={styles.input}
+                  value={businessProfile[activeExtended.key]?.[field.name] ?? ''}
+                  onChange={(e) =>
+                    setSection(activeExtended.key, { [field.name]: e.target.value })
+                  }
+                />
+              )}
+            </Field>
+          ))}
+          <SectionNav
+            onBack={() => {
+              const idx = allSections.indexOf(activeExtended.key)
+              setActive(allSections[idx - 1])
+            }}
+            onComplete={() => markComplete(activeExtended.key)}
+          />
+        </SectionFrame>
+      )}
+
+      {active !== 'purpose' && (
         <p className={styles.caption}>
           Your progress saves automatically. Mark each section complete to unlock
           submission.

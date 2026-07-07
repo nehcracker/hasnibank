@@ -160,7 +160,15 @@ export default function ApplicationWorkspace() {
 
         <div className={styles.workspaceGrid}>
           <div>
-            {tab === 'application' && <ApplicationTab application={application} />}
+            {tab === 'application' && (
+              <ApplicationTab
+                application={application}
+                documents={related.documents}
+                events={related.events}
+                user={user}
+                onChanged={() => { refreshApplication(); refreshRelated() }}
+              />
+            )}
             {tab === 'assessment'  && (
               <AssessmentTab
                 application={application}

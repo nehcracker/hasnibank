@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import stageMeta from '@/data/stageMeta'
+import { getExtendedSections, EXTENDED_SECTION_LABELS } from '@/data/extendedSections'
 import styles from './ActionCard.module.css'
 
 export const SECTION_LABELS = {
@@ -8,9 +9,18 @@ export const SECTION_LABELS = {
   trading: 'Sector and trading history',
   financials: 'Revenue and obligations',
   purpose: 'Funding purpose',
+  ...EXTENDED_SECTION_LABELS,
 }
 
 const SECTION_ORDER = ['registration', 'trading', 'financials', 'purpose']
+
+/** Base sections plus any staff-required extended sections, in form order. */
+function sectionOrderFor(application) {
+  return [
+    ...SECTION_ORDER,
+    ...getExtendedSections(application?.required_sections).map((s) => s.key),
+  ]
+}
 
 const WHILE_YOU_WAIT = [
   { label: 'Run the eligibility check', to: '/dashboard/eligibility' },
@@ -137,8 +147,9 @@ function DraftBlock({
   onResume,
   onSubmit,
 }) {
+  const sectionOrder = sectionOrderFor(application)
   const progress = application?.business_profile?.progress ?? {}
-  const firstIncomplete = SECTION_ORDER.find((s) => progress[s] !== true)
+  const firstIncomplete = sectionOrder.find((s) => progress[s] !== true)
   const outstanding = checklist.filter((item) => item.status === 'outstanding')
   const topOutstanding = outstanding.slice(0, 3)
   const moreCount = outstanding.length - topOutstanding.length
@@ -158,7 +169,7 @@ function DraftBlock({
         <div className={styles.column}>
           <h3 className={styles.columnTitle}>Part 1: Business profile</h3>
           <ul className={styles.itemList}>
-            {SECTION_ORDER.map((key) => (
+            {sectionOrder.map((key) => (
               <li key={key} className={styles.item}>
                 {progress[key] === true ? <TickIcon /> : <CircleIcon />}
                 <span
