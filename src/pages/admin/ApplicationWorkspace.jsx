@@ -187,7 +187,15 @@ export default function ApplicationWorkspace() {
                 onChanged={() => { refreshApplication(); refreshRelated() }}
               />
             )}
-            {tab === 'funding'     && <FundingTab />}
+            {tab === 'funding'     && (
+              <FundingTab
+                application={application}
+                offers={related.offers}
+                disbursements={related.disbursements}
+                user={user}
+                onChanged={refreshRelated}
+              />
+            )}
           </div>
 
           <RightRail

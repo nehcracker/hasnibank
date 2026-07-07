@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import { supabase } from '@/lib/supabase'
 import { buildSchedule, totals } from '@/lib/amortisation'
 import ScheduleTable from './ScheduleTable'
 import styles from './Modelling.module.css'
@@ -79,11 +80,37 @@ const STRUCTURE_LABELS = {
  */
 export default function ActualSchedule({ application, onGoToEstimator }) {
   const [colors, setColors] = useState(null)
+  const [startDate, setStartDate] = useState(null)
 
   // Resolve CSS token hex values once on mount.
   useEffect(() => {
     setColors(resolveChartColors())
   }, [])
+
+  // The first disbursed tranche anchors the dated schedule (Phase C).
+  useEffect(() => {
+    if (!application?.id) return
+    let cancelled = false
+    supabase
+      .from('disbursements')
+      .select('actual_date')
+      .eq('application_id', application.id)
+      .eq('status', 'disbursed')
+      .not('actual_date', 'is', null)
+      .order('tranche_no', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          // Table may not exist yet in this environment — undated schedule
+          console.warn('[ActualSchedule] disbursements unavailable:', error.message)
+        } else if (data?.actual_date) {
+          setStartDate(data.actual_date)
+        }
+      })
+    return () => { cancelled = true }
+  }, [application?.id])
 
   const offerTerms = application?.offer_terms
   const currency = offerTerms?.currency ?? 'USD'
@@ -121,11 +148,12 @@ export default function ActualSchedule({ application, onGoToEstimator }) {
       return buildSchedule({
         ...engineParams,
         balloonPct: engineParams.structure === 'balloon' ? engineParams.balloonPct : 0,
+        startDate,
       })
     } catch {
       return []
     }
-  }, [engineParams])
+  }, [engineParams, startDate])
 
   const { totalPaid, totalInterest } = useMemo(() => totals(schedule), [schedule])
 

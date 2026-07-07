@@ -25,6 +25,12 @@ export default function ScheduleTable({ schedule, currency = 'USD' }) {
 
   const visible = expanded ? schedule : schedule.slice(0, PREVIEW_ROWS)
   const hiddenCount = schedule.length - PREVIEW_ROWS
+  // Dated schedules (anchored to the first disbursement) gain a Due date column
+  const dated = schedule.some(row => row.dueDate)
+  const dateFmt = (iso) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    })
 
   return (
     <div className={styles.tableCard}>
@@ -34,6 +40,7 @@ export default function ScheduleTable({ schedule, currency = 'USD' }) {
           <thead>
             <tr>
               <th>Period</th>
+              {dated && <th>Due date</th>}
               <th>Payment</th>
               <th>Interest</th>
               <th>Principal</th>
@@ -44,6 +51,7 @@ export default function ScheduleTable({ schedule, currency = 'USD' }) {
             {visible.map(row => (
               <tr key={row.period}>
                 <td>{row.period}</td>
+                {dated && <td>{row.dueDate ? dateFmt(row.dueDate) : ''}</td>}
                 <td>{fmt.format(row.payment)}</td>
                 <td>{fmt.format(row.interest)}</td>
                 <td>{fmt.format(row.principal)}</td>

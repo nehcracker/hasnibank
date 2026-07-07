@@ -38,6 +38,20 @@ export function paymentAmount({ principal, annualRatePct, termMonths, frequency 
 // ---------------------------------------------------------------------------
 
 /**
+ * Add whole months to an ISO date (YYYY-MM-DD), clamping the day to the
+ * target month's length (Jan 31 + 1 month -> Feb 28/29).
+ */
+function addMonthsIso(isoDate, months) {
+  const [y, m, d] = isoDate.split('-').map(Number)
+  const zeroBased = (m - 1) + months
+  const year = y + Math.floor(zeroBased / 12)
+  const month = (zeroBased % 12) + 1
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const day = Math.min(d, daysInMonth)
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+/**
  * Build a full amortisation schedule.
  *
  * Structures:
@@ -54,6 +68,11 @@ export function paymentAmount({ principal, annualRatePct, termMonths, frequency 
  *   The remainder ((1 - balloonPct/100) * principal) amortises normally over the full term.
  *   Final payment = last amortising instalment + balloon lump.
  *
+ * Dates:
+ *   Pass startDate (ISO YYYY-MM-DD, typically the first disbursement date)
+ *   to emit a dueDate per period, advancing by the payment frequency.
+ *   Without startDate every dueDate is null.
+ *
  * @param {{
  *   principal: number,
  *   annualRatePct: number,
@@ -61,9 +80,10 @@ export function paymentAmount({ principal, annualRatePct, termMonths, frequency 
  *   frequency: string,
  *   graceMonths?: number,
  *   structure?: 'amortising' | 'bullet',
- *   balloonPct?: number
+ *   balloonPct?: number,
+ *   startDate?: string
  * }} opts
- * @returns {{ period: number, payment: number, interest: number, principal: number, balance: number }[]}
+ * @returns {{ period: number, payment: number, interest: number, principal: number, balance: number, dueDate: string|null }[]}
  */
 export function buildSchedule({
   principal,
@@ -73,10 +93,17 @@ export function buildSchedule({
   graceMonths = 0,
   structure = 'amortising',
   balloonPct = 0,
+  startDate = null,
 }) {
   const periodsPerYear = PERIODS_PER_YEAR[frequency]
   const totalPeriods = (termMonths / 12) * periodsPerYear
   const r = annualRatePct / 100 / periodsPerYear
+  const monthsPerPeriod = 12 / periodsPerYear
+  const withDueDates = (schedule) =>
+    schedule.map((row) => ({
+      ...row,
+      dueDate: startDate ? addMonthsIso(startDate, row.period * monthsPerPeriod) : null,
+    }))
 
   // ── Bullet ────────────────────────────────────────────────────────────────
   if (structure === 'bullet') {
@@ -96,7 +123,7 @@ export function buildSchedule({
       }
     }
 
-    return schedule
+    return withDueDates(schedule)
   }
 
   // ── Amortising (with optional grace and/or balloon) ────────────────────────
@@ -151,7 +178,7 @@ export function buildSchedule({
     }
   }
 
-  return schedule
+  return withDueDates(schedule)
 }
 
 // ---------------------------------------------------------------------------

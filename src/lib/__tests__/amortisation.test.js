@@ -360,3 +360,53 @@ describe('dscr', () => {
     expect(avgDscr).toBeGreaterThan(0)
   })
 })
+
+// ── dated schedule (Phase C) ──────────────────────────────────────────────────
+
+describe('buildSchedule with startDate', () => {
+  const base = {
+    principal: 100000,
+    annualRatePct: 12,
+    termMonths: 12,
+    frequency: 'monthly',
+  }
+
+  it('omitting startDate leaves dueDate null on every period', () => {
+    const schedule = buildSchedule(base)
+    expect(schedule.every((row) => row.dueDate === null)).toBe(true)
+  })
+
+  it('monthly periods advance one month from the start date', () => {
+    const schedule = buildSchedule({ ...base, startDate: '2026-08-01' })
+    expect(schedule[0].dueDate).toBe('2026-09-01')
+    expect(schedule[1].dueDate).toBe('2026-10-01')
+    expect(schedule[11].dueDate).toBe('2027-08-01')
+  })
+
+  it('quarterly periods advance three months', () => {
+    const schedule = buildSchedule({
+      ...base,
+      frequency: 'quarterly',
+      startDate: '2026-08-01',
+    })
+    expect(schedule.map((row) => row.dueDate)).toEqual([
+      '2026-11-01', '2027-02-01', '2027-05-01', '2027-08-01',
+    ])
+  })
+
+  it('clamps to the end of shorter months', () => {
+    const schedule = buildSchedule({ ...base, startDate: '2026-01-31' })
+    expect(schedule[0].dueDate).toBe('2026-02-28')
+    expect(schedule[1].dueDate).toBe('2026-03-31')
+  })
+
+  it('bullet schedules carry due dates too', () => {
+    const schedule = buildSchedule({
+      ...base,
+      structure: 'bullet',
+      startDate: '2026-08-01',
+    })
+    expect(schedule[0].dueDate).toBe('2026-09-01')
+    expect(schedule[11].dueDate).toBe('2027-08-01')
+  })
+})
