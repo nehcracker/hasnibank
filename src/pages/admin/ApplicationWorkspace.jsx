@@ -179,7 +179,14 @@ export default function ApplicationWorkspace() {
                 onChanged={refreshRelated}
               />
             )}
-            {tab === 'offer'       && <OfferTab />}
+            {tab === 'offer'       && (
+              <OfferTab
+                application={application}
+                offers={related.offers}
+                user={user}
+                onChanged={() => { refreshApplication(); refreshRelated() }}
+              />
+            )}
             {tab === 'funding'     && <FundingTab />}
           </div>
 

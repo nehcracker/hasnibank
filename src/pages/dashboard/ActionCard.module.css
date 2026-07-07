@@ -315,3 +315,19 @@
   opacity: 0;
   overflow: hidden;
 }
+
+/* ── Offer acceptance declaration ───────────────────────── */
+.declarationRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ivory);
+  margin: 0 0 var(--space-4);
+  cursor: pointer;
+}
+
+.declarationRow input {
+  margin-top: 3px;
+}

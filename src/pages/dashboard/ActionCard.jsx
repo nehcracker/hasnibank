@@ -84,6 +84,7 @@ export default function ActionCard({
   accepting = false,
   rfis = [],
   respondingRfiId = null,
+  offer = null,
   onResume,
   onSubmit,
   onAcceptOffer,
@@ -101,6 +102,7 @@ export default function ActionCard({
         accepting={accepting}
         rfis={rfis}
         respondingRfiId={respondingRfiId}
+        offer={offer}
         onResume={onResume}
         onSubmit={onSubmit}
         onAcceptOffer={onAcceptOffer}
@@ -376,8 +378,32 @@ function InReviewBlock({ application }) {
 
 /* ── Offer issued ──────────────────────────────────────────────────────────── */
 
-function OfferBlock({ application, accepting, onAcceptOffer }) {
-  const terms = application?.offer_terms
+function OfferBlock({ application, offer, accepting, onAcceptOffer }) {
+  const [declared, setDeclared] = useState(false)
+  // Versioned offer wins; applications.offer_terms remains the fallback
+  const terms = offer?.terms ?? application?.offer_terms
+  const expired =
+    offer?.status === 'issued' &&
+    offer?.valid_until &&
+    new Date(offer.valid_until) < new Date(new Date().toDateString())
+  const companyName = application?.business_profile?.registration?.legalName
+
+  if (expired) {
+    return (
+      <>
+        <h2 className={styles.title}>Your financing offer has expired</h2>
+        <p className={styles.body}>
+          The validity period of this offer has passed. Contact the team through
+          Messages to have terms reissued.
+        </p>
+        <div className={styles.actionRow}>
+          <Link to="/dashboard/messages" className={styles.primaryBtn}>
+            Go to messages
+          </Link>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -398,6 +424,12 @@ function OfferBlock({ application, accepting, onAcceptOffer }) {
             <dt className={styles.termLabel}>Term</dt>
             <dd className={styles.termValue}>{terms.term_months} months</dd>
           </div>
+          {offer?.valid_until && (
+            <div className={styles.term}>
+              <dt className={styles.termLabel}>Valid until</dt>
+              <dd className={styles.termValue}>{formatDue(offer.valid_until)}</dd>
+            </div>
+          )}
         </dl>
       ) : (
         <p className={styles.body}>
@@ -405,20 +437,33 @@ function OfferBlock({ application, accepting, onAcceptOffer }) {
           they arrive.
         </p>
       )}
+      {application?.status === 'offer_issued' && terms && (
+        <label className={styles.declarationRow}>
+          <input
+            type="checkbox"
+            checked={declared}
+            onChange={(e) => setDeclared(e.target.checked)}
+          />
+          I have read and accept the terms of this offer
+          {companyName ? ` on behalf of ${companyName}` : ''}.
+        </label>
+      )}
       <div className={styles.actionRow}>
         {application?.status === 'offer_issued' && (
           <button
             type="button"
             className={styles.primaryBtn}
-            onClick={() => onAcceptOffer?.()}
-            disabled={accepting}
+            onClick={() => onAcceptOffer?.(declared)}
+            disabled={accepting || (terms && !declared)}
           >
             {accepting ? 'Accepting...' : 'Accept offer'}
           </button>
         )}
-        <Link to="/dashboard/documents" className={styles.secondaryLink}>
-          View or download offer documents
-        </Link>
+        {offer && (
+          <Link to="/dashboard/offer-letter" className={styles.secondaryLink}>
+            View offer letter
+          </Link>
+        )}
         <Link to="/dashboard/modelling" className={styles.secondaryLink}>
           See your repayment schedule
         </Link>

@@ -38,6 +38,7 @@ import MessagesPage from '@/pages/dashboard/MessagesPage'
 import FeesPage from '@/pages/dashboard/FeesPage'
 import Eligibility from '@/pages/dashboard/Eligibility'
 import ExportSummary from '@/pages/dashboard/ExportSummary'
+import OfferLetter from '@/pages/dashboard/OfferLetter'
 import ProfileSettings from '@/pages/dashboard/ProfileSettings'
 
 /**
@@ -94,6 +95,7 @@ function AppInner() {
             <Route path="fees"              element={<FeesPage />} />
             <Route path="eligibility"       element={<Eligibility />} />
             <Route path="export"            element={<ExportSummary />} />
+            <Route path="offer-letter"      element={<OfferLetter />} />
             <Route path="profile"           element={<ProfileSettings />} />
           </Route>
         </Routes>

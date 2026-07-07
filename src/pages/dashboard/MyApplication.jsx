@@ -135,6 +135,27 @@ export default function MyApplication() {
 
   const [documents, setDocuments] = useState([])
   const [rfis, setRfis] = useState([])
+  const [offers, setOffers] = useState([])
+
+  const loadOffers = useCallback(async () => {
+    if (!application?.id) return
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*')
+      .eq('application_id', application.id)
+      .order('version', { ascending: false })
+    if (error) {
+      // Table may not exist yet in this environment — treat as empty list
+      console.warn('[MyApplication] offers unavailable:', error.message)
+      setOffers([])
+    } else {
+      setOffers(data ?? [])
+    }
+  }, [application?.id])
+
+  useEffect(() => {
+    loadOffers()
+  }, [loadOffers])
   const [formSection, setFormSection] = useState(null) // section key = form open
   const [submitting, setSubmitting] = useState(false)
   const [accepting, setAccepting] = useState(false)
@@ -223,6 +244,10 @@ export default function MyApplication() {
   const isDraft = application.status === 'draft'
   const actionMode = ['draft_profile', 'draft_kyc', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
   const openRfiCount = rfis.filter((r) => r.status === 'open').length
+  const activeOffer =
+    offers.find((o) => o.status === 'issued') ??
+    offers.find((o) => o.status === 'accepted') ??
+    null
 
   const receivedCount = checklist.filter(
     (item) => item.status === 'received' || item.status === 'verified'
@@ -252,8 +277,39 @@ export default function MyApplication() {
     setSubmitting(false)
   }
 
-  async function handleAcceptOffer() {
+  async function handleAcceptOffer(declared) {
     setAccepting(true)
+
+    // Record acceptance on the versioned offer first (Phase C); the
+    // application status change below remains the source of truth for stage
+    if (activeOffer && declared) {
+      const declaration = `I have read and accept the terms of this offer${
+        application.business_profile?.registration?.legalName
+          ? ` on behalf of ${application.business_profile.registration.legalName}`
+          : ''
+      }.`
+      const { error: offerError } = await supabase
+        .from('offers')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+          acceptance_meta: { declaration },
+        })
+        .eq('id', activeOffer.id)
+      if (offerError) {
+        console.error('[MyApplication] offer accept error:', offerError.message)
+      } else {
+        await supabase.from('application_events').insert({
+          application_id: application.id,
+          actor_id: user.id,
+          actor_role: 'borrower',
+          event_type: 'offer',
+          payload: { detail: `Offer version ${activeOffer.version} accepted` },
+        })
+        await loadOffers()
+      }
+    }
+
     const { error } = await supabase
       .from('applications')
       .update({ status: 'offer_accepted' })
@@ -384,6 +440,7 @@ export default function MyApplication() {
           accepting={accepting}
           rfis={rfis}
           respondingRfiId={respondingRfiId}
+          offer={activeOffer}
           onResume={(section) => setFormSection(section)}
           onSubmit={handleSubmit}
           onAcceptOffer={handleAcceptOffer}
