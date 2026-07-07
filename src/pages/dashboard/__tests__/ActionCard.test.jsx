@@ -1,13 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import ActionCard from '../ActionCard'
-import { getRequirements, deriveChecklist } from '@/data/docRequirements'
-
-const SME_CHECKLIST_EMPTY = deriveChecklist(getRequirements('sme'), [])
-const SME_CHECKLIST_FULL = deriveChecklist(
-  getRequirements('sme'),
-  getRequirements('sme').map((r) => ({ document_type: r.type }))
-)
 
 function makeApp(overrides = {}) {
   return {
@@ -25,7 +18,6 @@ function setup(props = {}) {
   const defaults = {
     state: 'draft_profile',
     application: makeApp(),
-    checklist: SME_CHECKLIST_EMPTY,
     completionPct: 0,
     canSubmitNow: false,
     submitting: false,
@@ -65,34 +57,52 @@ test('draft_profile resume names the first incomplete section', () => {
   ).toBeInTheDocument()
 })
 
-test('draft_profile lists top 3 outstanding KYC items with a more link', () => {
+const COMPLETED_CHECK = {
+  answers: { q1: 1 }, score: 8.2, band: 'Application-ready',
+  completed_at: '2026-07-07T12:00:00Z',
+}
+
+const FULL_PROFILE = {
+  progress: { registration: true, trading: true, financials: true, purpose: true },
+}
+
+test('draft_profile shows the self-check as part 2 with a run link', () => {
   setup({ state: 'draft_profile' })
-  // 6 outstanding for sme; top 3 shown, 3 more behind the checklist link
-  expect(screen.getByText('Certificate of Incorporation')).toBeInTheDocument()
-  expect(screen.getByText('Director / Owner ID')).toBeInTheDocument()
-  expect(screen.getByText('Proof of Address')).toBeInTheDocument()
-  expect(screen.queryByText('Management Accounts')).not.toBeInTheDocument()
-  expect(screen.getByText(/\+3 more in the checklist/i)).toBeInTheDocument()
+  expect(screen.getByText('Part 2: Fundability self-check')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /run the self-check/i })).toHaveAttribute(
+    'href',
+    '/dashboard/eligibility'
+  )
 })
 
-test('draft_kyc has no submit button while KYC outstanding', () => {
-  setup({ state: 'draft_kyc', canSubmitNow: false })
+test('draft_selfcheck without a completed check has no submit button', () => {
+  setup({
+    state: 'draft_selfcheck',
+    application: makeApp({ business_profile: FULL_PROFILE }),
+    canSubmitNow: false,
+  })
   expect(
     screen.queryByRole('button', { name: /submit application/i })
   ).not.toBeInTheDocument()
+  // Primary action steers to the self-check instead
+  expect(screen.getAllByRole('link', { name: /run the self-check/i }).length).toBeGreaterThan(0)
 })
 
-test('draft_kyc shows submit button when canSubmitNow', () => {
+test('draft_selfcheck with completed check shows score, band, and submit', () => {
   const onSubmit = vi.fn()
   setup({
-    state: 'draft_kyc',
-    checklist: SME_CHECKLIST_FULL,
+    state: 'draft_selfcheck',
+    application: makeApp({
+      business_profile: FULL_PROFILE,
+      eligibility: COMPLETED_CHECK,
+    }),
     canSubmitNow: true,
     completionPct: 100,
     onSubmit,
   })
+  expect(screen.getByText(/8\.2 \/ 10/)).toBeInTheDocument()
+  expect(screen.getByText(/application-ready/i)).toBeInTheDocument()
   const btn = screen.getByRole('button', { name: /submit application/i })
-  expect(btn).toBeInTheDocument()
   btn.click()
   expect(onSubmit).toHaveBeenCalled()
 })
@@ -107,7 +117,7 @@ test('in_review lists the three while-you-wait prompts', () => {
   ).toBeInTheDocument()
   expect(screen.getByText(/run the eligibility check/i)).toBeInTheDocument()
   expect(screen.getByText(/model your repayments/i)).toBeInTheDocument()
-  expect(screen.getByText(/review your document checklist/i)).toBeInTheDocument()
+  expect(screen.getByText(/review your documents/i)).toBeInTheDocument()
 })
 
 test('offer_issued shows offer terms and accept action', () => {

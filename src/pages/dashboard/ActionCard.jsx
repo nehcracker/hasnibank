@@ -25,7 +25,7 @@ function sectionOrderFor(application) {
 const WHILE_YOU_WAIT = [
   { label: 'Run the eligibility check', to: '/dashboard/eligibility' },
   { label: 'Model your repayments', to: '/dashboard/modelling' },
-  { label: 'Review your document checklist', to: '/dashboard/checklist' },
+  { label: 'Review your documents', to: '/dashboard/documents' },
 ]
 
 function money(amount, currency = 'USD') {
@@ -60,9 +60,8 @@ function CircleIcon() {
  * Purely presentational; all data and mutations arrive via props.
  *
  * @param {object} props
- * @param {'draft_profile'|'draft_kyc'|'in_review'|'offer_issued'|'fee_due'|'funded'} props.state
+ * @param {'draft_profile'|'draft_selfcheck'|'in_review'|'offer_issued'|'fee_due'|'funded'} props.state
  * @param {object} props.application
- * @param {Array}  props.checklist       derived doc checklist with status per item
  * @param {number} props.completionPct   overall draft completion 0..100
  * @param {boolean} props.canSubmitNow
  * @param {boolean} props.submitting
@@ -77,7 +76,6 @@ function CircleIcon() {
 export default function ActionCard({
   state,
   application,
-  checklist = [],
   completionPct = 0,
   canSubmitNow = false,
   submitting = false,
@@ -95,7 +93,6 @@ export default function ActionCard({
       <CardBody
         state={state}
         application={application}
-        checklist={checklist}
         completionPct={completionPct}
         canSubmitNow={canSubmitNow}
         submitting={submitting}
@@ -115,7 +112,7 @@ export default function ActionCard({
 function CardBody(props) {
   switch (props.state) {
     case 'draft_profile':
-    case 'draft_kyc':
+    case 'draft_selfcheck':
       return <DraftBlock {...props} />
     case 'rfi_open':
       return (
@@ -137,12 +134,11 @@ function CardBody(props) {
   }
 }
 
-/* ── Draft: profile + KYC two-column frame ─────────────────────────────────── */
+/* ── Draft: profile + self-check two-column frame ──────────────────────────── */
 
 function DraftBlock({
   state,
   application,
-  checklist,
   completionPct,
   canSubmitNow,
   submitting,
@@ -152,9 +148,8 @@ function DraftBlock({
   const sectionOrder = sectionOrderFor(application)
   const progress = application?.business_profile?.progress ?? {}
   const firstIncomplete = sectionOrder.find((s) => progress[s] !== true)
-  const outstanding = checklist.filter((item) => item.status === 'outstanding')
-  const topOutstanding = outstanding.slice(0, 3)
-  const moreCount = outstanding.length - topOutstanding.length
+  const eligibility = application?.eligibility
+  const checkDone = Boolean(eligibility?.completed_at)
 
   return (
     <>
@@ -187,27 +182,30 @@ function DraftBlock({
         </div>
 
         <div className={styles.column}>
-          <h3 className={styles.columnTitle}>Part 2: KYC documents</h3>
-          {outstanding.length === 0 ? (
-            <p className={styles.allReceived}>All required documents received.</p>
-          ) : (
+          <h3 className={styles.columnTitle}>Part 2: Fundability self-check</h3>
+          {checkDone ? (
             <>
               <ul className={styles.itemList}>
-                {topOutstanding.map((item) => (
-                  <li key={item.type} className={styles.item}>
-                    <CircleIcon />
-                    <span className={styles.itemPending}>{item.label}</span>
-                    <Link to="/dashboard/documents" className={styles.uploadLink}>
-                      Upload
-                    </Link>
-                  </li>
-                ))}
+                <li className={styles.item}>
+                  <TickIcon />
+                  <span className={styles.itemDone}>
+                    Completed · {Number(eligibility.score).toFixed(1)} / 10 · {eligibility.band}
+                  </span>
+                </li>
               </ul>
-              {moreCount > 0 && (
-                <Link to="/dashboard/checklist" className={styles.moreLink}>
-                  +{moreCount} more in the checklist
-                </Link>
-              )}
+              <Link to="/dashboard/eligibility" className={styles.moreLink}>
+                Retake the self-check
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className={styles.itemPending}>
+                A short readiness check the assessment team sees alongside your
+                profile. Any score is accepted.
+              </p>
+              <Link to="/dashboard/eligibility" className={styles.uploadLink}>
+                Run the self-check
+              </Link>
             </>
           )}
         </div>
@@ -223,7 +221,7 @@ function DraftBlock({
             Resume: {SECTION_LABELS[firstIncomplete]}
           </button>
         )}
-        {state === 'draft_kyc' &&
+        {state === 'draft_selfcheck' &&
           (canSubmitNow ? (
             <button
               type="button"
@@ -234,8 +232,8 @@ function DraftBlock({
               {submitting ? 'Submitting...' : 'Submit application'}
             </button>
           ) : (
-            <Link to="/dashboard/documents" className={styles.primaryBtn}>
-              Upload: {outstanding[0]?.label ?? 'documents'}
+            <Link to="/dashboard/eligibility" className={styles.primaryBtn}>
+              Run the self-check
             </Link>
           ))}
       </div>
