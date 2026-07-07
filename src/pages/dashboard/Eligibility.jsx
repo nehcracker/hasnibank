@@ -1,6 +1,9 @@
-import { useState, useId } from 'react'
+import { useState, useId, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { questions, scoreAnswers } from '@/data/eligibilityModel'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { useApplication } from '@/hooks/useApplication'
 import styles from './Eligibility.module.css'
 
 // ── Score dial (SVG arc gauge) ────────────────────────────────────────────────
@@ -71,10 +74,48 @@ export default function Eligibility() {
   const [answers, setAnswers] = useState({})
   const groupId = useId()
 
+  const { user } = useAuth()
+  const { application, refresh } = useApplication()
+  const savedRef = useRef(false)
+  const isDraft = application?.status === 'draft'
+
   const isComplete = step >= questions.length
   const currentQ = isComplete ? null : questions[step]
   const currentAnswer = currentQ != null ? (answers[currentQ.id] ?? null) : null
   const hasAnswer = currentAnswer !== null
+
+  // Persist the result to the draft application the first time the result
+  // screen is reached; retakes reset the flag so a new run overwrites.
+  useEffect(() => {
+    if (!isComplete || !isDraft || savedRef.current) return
+    savedRef.current = true
+    const { score, band } = scoreAnswers(answers)
+    const eligibility = {
+      answers,
+      score,
+      band,
+      completed_at: new Date().toISOString(),
+    }
+    supabase
+      .from('applications')
+      .update({ eligibility })
+      .eq('id', application.id)
+      .then(({ error }) => {
+        if (error) {
+          console.warn('[Eligibility] save failed:', error.message)
+          return
+        }
+        supabase.from('application_events').insert({
+          application_id: application.id,
+          actor_id: user.id,
+          actor_role: 'borrower',
+          event_type: 'note',
+          payload: { detail: 'Fundability self-check completed' },
+        })
+        refresh?.()
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete, isDraft])
 
   function handleSelect(value) {
     if (!currentQ) return
@@ -94,6 +135,7 @@ export default function Eligibility() {
   }
 
   function handleRetake() {
+    savedRef.current = false
     setStep(0)
     setAnswers({})
   }
@@ -102,11 +144,8 @@ export default function Eligibility() {
 
   if (isComplete) {
     const { score, band, fixes } = scoreAnswers(answers)
-    const isReady = band !== 'Not yet ready'
-    const ctaHref = isReady ? '/dashboard' : '/dashboard/checklist'
-    const ctaLabel = isReady
-      ? 'Start financing application'
-      : 'Review document checklist'
+    const ctaHref = application ? '/dashboard/application' : '/dashboard'
+    const ctaLabel = application ? 'Back to your application' : 'Start financing application'
 
     return (
       <div className={styles.page}>
@@ -119,6 +158,12 @@ export default function Eligibility() {
           <span className={`${styles.bandChip} ${BAND_CHIP_CLASS[band] ?? ''}`}>
             {band}
           </span>
+
+          {isDraft && (
+            <p className={styles.disclaimer}>
+              Result saved to your application for the assessment team.
+            </p>
+          )}
 
           {fixes.length > 0 && (
             <div className={styles.fixSection}>
