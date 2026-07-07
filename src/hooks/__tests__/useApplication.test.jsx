@@ -74,7 +74,7 @@ beforeEach(() => {
 describe('useApplication realtime subscription', () => {
   it('two simultaneous consumers do not collide on the realtime channel', () => {
     // Topbar's NotificationsBell and a dashboard page (Overview, Modelling,
-    // DocChecklist, ExportSummary) both call useApplication at the same time.
+    // DocumentsPage, ExportSummary) both call useApplication at the same time.
     expect(() =>
       render(
         <>

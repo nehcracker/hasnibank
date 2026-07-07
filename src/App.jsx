@@ -33,7 +33,6 @@ import MyApplication from '@/pages/dashboard/MyApplication'
 import StartApplication from '@/pages/dashboard/StartApplication'
 import Modelling from '@/pages/dashboard/Modelling'
 import DocumentsPage from '@/pages/dashboard/DocumentsPage'
-import DocChecklist from '@/pages/dashboard/DocChecklist'
 import MessagesPage from '@/pages/dashboard/MessagesPage'
 import FeesPage from '@/pages/dashboard/FeesPage'
 import Eligibility from '@/pages/dashboard/Eligibility'
@@ -90,7 +89,6 @@ function AppInner() {
             <Route path="application"       element={<MyApplication />} />
             <Route path="modelling"         element={<Modelling />} />
             <Route path="documents"         element={<DocumentsPage />} />
-            <Route path="checklist"         element={<DocChecklist />} />
             <Route path="messages"          element={<MessagesPage />} />
             <Route path="fees"              element={<FeesPage />} />
             <Route path="eligibility"       element={<Eligibility />} />
