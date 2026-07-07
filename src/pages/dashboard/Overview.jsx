@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { financingTracks } from '@/data/financingData'
@@ -14,7 +12,7 @@ const TRACK_LABEL = Object.fromEntries(financingTracks.map((t) => [t.id, t.title
 const SELF_SERVICE_TOOLS = [
   { title: 'Repayment modelling', href: '/dashboard/modelling' },
   { title: 'Eligibility check',   href: '/dashboard/eligibility' },
-  { title: 'Document checklist',  href: '/dashboard/checklist' },
+  { title: 'Documents',           href: '/dashboard/documents' },
   { title: 'Export summary',      href: '/dashboard/export' },
 ]
 
@@ -26,33 +24,10 @@ function capitalise(str) {
 export default function Overview() {
   const { profile } = useAuth()
   const { application, loading } = useApplication()
-  const [documents, setDocuments] = useState([])
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there'
   const clientRef = profile?.client_ref
   const isDraft = application?.status === 'draft'
-
-  // Draft completion needs the uploaded-documents list
-  useEffect(() => {
-    if (!application?.id || application.status !== 'draft') return
-    let cancelled = false
-    supabase
-      .from('application_documents')
-      .select('*')
-      .eq('application_id', application.id)
-      .then(({ data, error }) => {
-        if (cancelled) return
-        if (error) {
-          console.warn('[Overview] application_documents unavailable:', error.message)
-          setDocuments([])
-        } else {
-          setDocuments(data ?? [])
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [application?.id, application?.status])
 
   if (loading) {
     return (
@@ -112,7 +87,7 @@ export default function Overview() {
               <span className={styles.summaryLabel}>Stage</span>
               <span className={styles.summaryValue}>
                 {isDraft
-                  ? `Draft · ${overallDraftCompletion(application, documents)}% complete`
+                  ? `Draft · ${overallDraftCompletion(application)}% complete`
                   : capitalise(application.status)}
               </span>
             </div>
