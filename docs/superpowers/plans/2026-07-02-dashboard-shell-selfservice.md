@@ -5,7 +5,8 @@
 **Date:** 2026-07-02
 **Updated:** 2026-07-05 — adds **Phase B: My Application redesign** (Tasks 14–19). Phase A tasks (1–13) may already be executed; verify checkboxes against the repo before re-running any of them.
 **Updated:** 2026-07-06 — adds **Phase C: staff assessment workspace** (Tasks 20–28): admin application detail rebuilt around four phase tabs, pillar findings with internal/visible split, information requests (RFIs), warn-with-override stage gates, extended intake, versioned offer builder, and disbursement scheduling. Reference mockup approved 2026-07-06.
-**Goal:** Replace the single-page borrower dashboard with a persistent shell (collapsible sidebar + topbar + routed centre content), a stable Client ID, an amortisation/repayment modelling suite (estimator, actual schedule, DSCR, scenario comparison), an eligibility self-check, a per-track document requirements checklist, per-stage SLA display, realtime updates, and an application PDF export. **Phase B** then rebuilds My Application as a self-service workspace: a draft application state, a stage-aware action card that always names the borrower's next move, a business profile + KYC completion flow that new signups land in directly, a condensed four-phase progress rail, and fixes for three visual defects. Every feature exists to let SME borrowers and project sponsors self-serve instead of contacting staff.
+**Updated:** 2026-07-08 — adds **Phase D: SME application simplification** (Tasks 29–36). Collapses the borrower intake into one grouped application form (Business, Contact, Financials, Financing request), adds KYC capture (time in operation, average monthly sales, email, phone, business address), demotes the eligibility self-check from a submission gate to an optional readiness tool, defers every document request to after an offer is posted, and places the Hasni Bank logo in the dashboard topbar and on the offer letter. Supersedes parts of the Phase B decisions and Tasks 7, 15, 16, 18, and 25 as noted inline against each. Reference mockup approved 2026-07-08.
+**Goal:** Replace the single-page borrower dashboard with a persistent shell (collapsible sidebar + topbar + routed centre content), a stable Client ID, an amortisation/repayment modelling suite (estimator, actual schedule, DSCR, scenario comparison), an eligibility self-check, a per-track document requirements checklist, per-stage SLA display, realtime updates, and an application PDF export. **Phase B** then rebuilds My Application as a self-service workspace: a draft application state, a stage-aware action card that always names the borrower's next move, a business profile + KYC completion flow that new signups land in directly, a condensed four-phase progress rail, and fixes for three visual defects. Every feature exists to let SME borrowers and project sponsors self-serve instead of contacting staff. **Phase D** then simplifies that intake: one grouped application form replaces the multi-section profile plus self-check gate, KYC capture is widened, supporting documents are requested only after an offer is posted, and the Hasni Bank mark is placed in the dashboard topbar and on the offer letter.
 
 **Architecture:** `/dashboard` becomes a nested layout route. `DashboardLayout.jsx` renders `Sidebar` + `Topbar` + `<Outlet>`; the marketing `Navbar`/`Footer` are suppressed for `/dashboard/*`. All child routes remain behind `ProtectedRoute requiredRole="borrower"`. The amortisation engine is a pure JS module (`src/lib/amortisation.js`) shared by the estimator, the actual-schedule view, DSCR, and scenario comparison — fully unit-tested, no React inside. Panels already specified in the loan-wizard plan (status tracker, documents, messages, fees — Phases 2–5) mount into shell routes via thin wrapper pages; this plan builds the shell and integration points, not those panels.
 
@@ -25,11 +26,16 @@
 | e-Signature, post-funding ledger, callback scheduling, SMS | **Out of scope** — future plan | Larger lifts, need separate decisions |
 | Business profile storage (Phase B) | `business_profile` jsonb on `applications` (not a separate table) | One row per applicant already enforced; sections + progress live together; overridable to a `business_profiles` table if relational queries on it are ever needed |
 | Draft state (Phase B) | Add `'draft'` to the `applications.status` check constraint; `submitted_at` column added | Application becomes the borrower's workspace before submission |
-| Post-signup landing (Phase B) | Profile completion → `/dashboard/start` (track + amount) → draft created → `/dashboard/application` in action mode | Replaces mounting `ApplicationWizard` inline on the dashboard |
+| Post-signup landing (Phase B) | Profile completion → `/dashboard/start` (track + amount) → draft created → `/dashboard/application` in action mode. **Phase D:** `/dashboard/application` now shows the single grouped form; the Part 1 profile plus Part 2 KYC split is removed | Replaces mounting `ApplicationWizard` inline on the dashboard |
 | Offer storage (Phase C) | Separate `offers` table, versioned, one active per application | Renegotiation history preserved (FFHC deposit-restructure pattern); overridable to jsonb array if table sprawl is a concern |
 | Stage gate (Phase C) | Warn, never block, when critical findings or open RFIs remain; override writes an `application_events` entry | Staff sometimes advance judgmentally; the override must be auditable |
 | Internal vs borrower-visible split (Phase C) | Hard table split: internal content in staff-only-RLS tables; borrower-visible statements in separate borrower-readable tables | Row-level security cannot hide columns; a shared table risks leaking internal credit notes |
 | Assessment score (Phase C) | Derived client-side from findings rollup, no stored column | Single source of truth; a stored copy would drift |
+| Intake form (Phase D) | One grouped `ApplicationForm` (Business, Contact, Financials, Financing request) replaces the multi-section `BusinessProfileForm` builder; all values write to `fields` jsonb | Shortest path to submission; the mockup approved 2026-07-08 fits on one page |
+| Self-check (Phase D) | Demoted from submission gate to an optional readiness tool; `canSubmit` no longer depends on it | Assessment is the staff decision, not a borrower questionnaire; the self-check stays useful without blocking |
+| Documents (Phase D) | Every document request deferred to after an offer is posted; none surfaced during application or assessment | Assessors work from form data; documents follow the offer. Trade-off accepted: no mid-assessment document pull |
+| New KYC fields (Phase D) | Add time in operation, average monthly sales, email, phone, business address to `fields` jsonb | No migration needed; `fields` is jsonb. Email and phone prefill from the profile |
+| Logo placement (Phase D) | Existing H-gate mark (`LogoMark`/`logo.svg`) placed in the dashboard topbar and the offer letter (screen and print) | Asset already exists; this is wiring, not design. Offer download is the print path, so one component covers both |
 
 ---
 
@@ -319,6 +325,8 @@ dscr({ netOperatingIncomePerPeriod, schedule }) ->
 - [ ] **Step 4:** Include the disclaimer line: "Indicative self-assessment only. It does not constitute an offer, approval, or advice."
 - [ ] **Step 5:** Tests + build pass; commit — `feat: eligibility self-check with weighted fundability scoring`
 
+> **Phase D note (2026-07-08):** the self-check is no longer a submission gate. It stays available as an optional readiness tool reachable from Overview and the in_review "while you wait" list. `canSubmit` (Task 15) must not read it, and the ActionCard must not require it before Submit. See Task 32.
+
 ---
 
 ## Task 8: Realtime — useRealtimeEvents + NotificationsBell
@@ -480,6 +488,8 @@ phaseFor(status) -> 1..4  (per PHASES table above)
 - [ ] **Step 4:** Implement `PhaseRail`; active segment: `--color-surface` bg + `--color-gold` border; inactive: `--color-border` border, muted text
 - [ ] **Step 5:** All tests + build pass; commit — `feat: application state helpers and four-phase progress rail`
 
+> **Phase D note (2026-07-08):** the `canSubmit` and `resolveActionState` contracts above are revised by Task 30. `canSubmit` becomes "required application fields present" with no self-check and no document dependency. `draft_profile` and `draft_kyc` collapse into a single `draft` state. Implement the Task 30 versions; treat the definitions here as historical.
+
 ---
 
 ## Task 16: ActionCard + BusinessProfileForm (TDD)
@@ -503,6 +513,8 @@ phaseFor(status) -> 1..4  (per PHASES table above)
 - [ ] **Step 2:** Implement ActionCard (presentational; all data via props)
 - [ ] **Step 3:** BusinessProfileForm: one section visible at a time with a section stepper; debounced autosave (800ms) via `update({ business_profile })` on the draft row; per-section "Mark complete" sets the progress flag; validation per field mirrors wizard rules
 - [ ] **Step 4:** Tests + build pass; commit — `feat: stage-aware action card and resumable business profile form`
+
+> **Phase D note (2026-07-08):** the two-part draft frame (Part 1 business profile, Part 2 KYC) and the `draft_kyc` state are removed by Tasks 29 and 31. The multi-section `BusinessProfileForm` is retired in favour of the single grouped `ApplicationForm`. Its per-field validation rules and the reused `*Fields.jsx` components carry over. Build the Task 31 ActionCard, which has one `draft` state.
 
 ---
 
@@ -534,6 +546,8 @@ phaseFor(status) -> 1..4  (per PHASES table above)
 - [ ] **Step 4:** Add `/dashboard/start` route in `App.jsx` inside the layout block
 - [ ] **Step 5:** Full flow manual test: fresh signup → verify email → profile → start → draft workspace; refresh mid-form resumes at saved state
 - [ ] **Step 6:** Commit — `feat: draft start flow and post-signup redirect into application workspace`
+
+> **Phase D note (2026-07-08):** the start flow still creates the draft row, but `/dashboard/application` now renders the single grouped `ApplicationForm` rather than the profile-plus-KYC workspace. Amount entered at start prefills the form. See Task 29.
 
 ---
 
@@ -765,6 +779,8 @@ gateCheck(findings, rfis) -> { criticalOpen: int, rfisOpen: int, clear: boolean 
 - [ ] **Step 3:** Borrower ActionCard reflects new required sections immediately (realtime on the applications row already exists)
 - [ ] **Step 4:** Build; commit — `feat: consistency review and staff-toggled extended intake`
 
+> **Phase D note (2026-07-08):** extended sections are no longer appended to the borrower's pre-submission intake, and `required_sections` no longer blocks submission. Anything an assessor needs beyond the single form is raised as a post-offer RFI. The consistency view in Step 1 stays. See Task 33.
+
 ---
 
 ## Task 26: Offer tab — versioned builder, letter, in-portal acceptance
@@ -797,6 +813,129 @@ gateCheck(findings, rfis) -> { criticalOpen: int, rfisOpen: int, clear: boolean 
 - [ ] **Step 2:** RLS sweep repeated from Task 20 Step 3 against the built UI (borrower session must never receive `assessment_findings` or `internal_notes` rows in any network response)
 - [ ] **Step 3:** End-to-end manual pass: staff records critical finding + RFI → borrower responds in ActionCard → staff resolves → gate clears → staff issues offer v1, reissues v2 → borrower accepts v2 → staff schedules and disburses tranche 1 → both sides see dated schedule
 - [ ] **Step 4:** Copy sweep: no em dashes, no "loan application", no direct-lending claims in Funding copy
+- [ ] **Step 5:** `git push origin main`
+
+---
+
+# Phase D — SME application simplification
+
+**Design principle:** the fastest honest path from "I want financing" to "we have assessed you". The borrower fills one grouped form, submits, and waits. Assessment runs on the form data. Documents are requested only once an offer is on the table. The self-check helps a borrower judge readiness but never stands between them and Submit. Reference mockup approved 2026-07-08.
+
+**Intake scope:** SME track. The `*Fields.jsx` components are shared across tracks, so the grouped form is built track-aware, but only SME is in scope for this phase; project, trade, and acquisition keep their current field sets until a later phase repeats this shape.
+
+**Form groups and fields (all write to `fields` jsonb):**
+
+| Group | Fields |
+|-------|--------|
+| Business | business name, registration number, business type, country of registration, time in operation, sector, number of employees |
+| Contact | email (prefilled from profile, editable), phone, business address |
+| Financials | average monthly sales (USD), existing debt obligations (yes/no) |
+| Financing request | financing purpose, amount sought, use of funds |
+
+New keys versus the Phase 1 SME field set: `registrationNumber`, `timeInOperation`, `sector`, `employees`, `email`, `phone`, `address`, `monthlySales`, `existingDebt`. Removed: the annual revenue band (`annualRevenue`), replaced by `monthlySales`.
+
+### Phase D file changes
+
+| File | Change |
+|------|--------|
+| `src/pages/dashboard/ApplicationForm.jsx` | New. Single grouped form with the four groups above, debounced autosave to the draft's `fields`, submit when required fields are present |
+| `src/pages/dashboard/BusinessProfileForm.jsx` | Retired as a multi-section builder. Shared `*Fields.jsx` imports move to `ApplicationForm` |
+| `src/pages/dashboard/MyApplication.jsx` | Renders `ApplicationForm` in the draft state instead of the profile-plus-KYC workspace |
+| `src/lib/applicationState.js` | `canSubmit` drops the self-check and document dependencies; `draft_profile` and `draft_kyc` collapse to `draft`; completion derived from required fields |
+| `src/pages/dashboard/ActionCard.jsx` | Single `draft` state; no Part 1 / Part 2 split |
+| `src/pages/dashboard/Eligibility.jsx` | Unchanged file, removed from the submission path; reachable as an optional tool |
+| `src/data/extendedSections.js` | No longer appended to borrower intake; sections become post-offer RFI templates |
+| `src/pages/admin/RfiForm.jsx` / RFI surfacing | Document-type requests only raisable and shown after `offer_issued` |
+| `src/layouts/Topbar.jsx` (+ module.css) | H-gate mark and wordmark, links to `/dashboard`, collapses to the mark on narrow widths |
+| `src/pages/dashboard/OfferLetter.jsx` (+ module.css, `print.css`) | Logo in the letter header, kept visible in print |
+| `src/pages/dashboard/ExportSummary.jsx` | Logo in the summary header for consistency |
+| `src/pages/admin/tabs/AssessmentTab.jsx`, `ApplicationTab.jsx`, `src/lib/assessment.js` | Read the new fields so the pillar rollup and consistency view see monthly sales and contact data |
+| `src/pages/wizard/ApplicationWizard.jsx` | Dead default export removed after `INITIAL_FIELDS` moves to a stable data module; step field components stay |
+
+---
+
+## Task 29: Single grouped application form
+
+**Files:** Create `src/pages/dashboard/ApplicationForm.jsx` + test. Modify `MyApplication.jsx`. Retire the section machinery in `BusinessProfileForm.jsx`.
+
+- [ ] **Step 1:** Build `ApplicationForm` with the four field groups above, light group headers, two-column rows matching the approved mockup. Email prefills from `profile`; phone prefills if present. Values read from and write to the draft's `fields` jsonb
+- [ ] **Step 2:** Debounced autosave (800ms) via `update({ fields })` on the draft row, so the form is resumable. No per-section "mark complete" step
+- [ ] **Step 3:** Required-field set for SME defined in one place and reused by `canSubmit` (Task 30): business name, registration number, business type, country, time in operation, monthly sales, financing purpose, amount sought, use of funds. Contact email required, phone and address optional unless you decide otherwise
+- [ ] **Step 4:** Move the shared `*Fields.jsx` imports here; remove the four-section stepper and completion flags from `BusinessProfileForm`
+- [ ] **Step 5:** Tests + build; commit — `feat: single grouped SME application form`
+
+---
+
+## Task 30: applicationState — drop the self-check gate
+
+**Files:** Modify `src/lib/applicationState.js` + tests
+
+- [ ] **Step 1 (failing tests):** `canSubmit(app)` returns true when the required-field set is present, with no reference to the self-check or documents; `resolveActionState` returns `draft` for any draft row regardless of self-check state; documents remain excluded from completion (already the case)
+- [ ] **Step 2:** Redefine `overallDraftCompletion` as the percentage of required fields filled. Remove the 60/40 profile-versus-KYC weighting and the `profileCompletion === 100 AND KYC` gate
+- [ ] **Step 3:** Collapse `draft_profile` and `draft_kyc` into a single `draft` branch; leave `in_review`, `offer_issued`, `rfi_open` (Phase C), `fee_due`, and `funded` intact
+- [ ] **Step 4:** Tests + build; commit — `refactor: submission gate on required fields only, self-check optional`
+
+---
+
+## Task 31: ActionCard — single draft state
+
+**Files:** Modify `src/pages/dashboard/ActionCard.jsx` + test
+
+- [ ] **Step 1 (failing tests):** the `draft` state renders one "Complete your application" block with a completion bar and a primary button that reads "Resume" while incomplete and "Submit application" once `canSubmit` is true; no Part 1 / Part 2 columns; no self-check requirement
+- [ ] **Step 2:** Submit sets `status='submitted'`, `submitted_at=now()`, inserts a `status_change` event, and switches the page to monitoring mode
+- [ ] **Step 3:** The `in_review` "while you wait" list keeps the optional links, including the self-check and the repayment estimator
+- [ ] **Step 4:** Tests + build; commit — `feat: single draft action-card state`
+
+---
+
+## Task 32: Self-check demoted to an optional tool
+
+**Files:** Modify `Overview.jsx`, `ActionCard.jsx` copy, routing note in `App.jsx`
+
+- [ ] **Step 1:** Keep the `/dashboard/eligibility` route and `Eligibility.jsx` as an optional readiness tool. Remove any wording that presents it as a required step before applying
+- [ ] **Step 2:** Its result CTA "Start application" stays as a convenience entry point but the band never blocks submission
+- [ ] **Step 3:** Build; commit — `chore: present self-check as optional readiness tool`
+
+---
+
+## Task 33: Documents and extended sections deferred to after offer
+
+**Files:** Modify RFI creation and surfacing (`RfiForm.jsx` and the staff assessment tab), `DocumentsPage`, `DocChecklist.jsx`
+
+- [ ] **Step 1:** Gate document-type RFIs so staff can only raise them, and borrowers only see upload targets, once the application has reached `offer_issued`. Before that, the documents route and checklist are informational only, with copy that the list is a preview of what will be requested after an offer
+- [ ] **Step 2:** Extended sections (`required_sections`, Task 25) no longer append to the borrower's intake and no longer affect completion or `canSubmit`. Convert their field definitions into post-offer RFI templates so an assessor can request them as items after an offer
+- [ ] **Step 3:** Confirm the RLS update policy still lets a borrower attach documents at the offer stage and later, not only in draft (the Task 14 policy limited updates to draft; document uploads write to a separate table, so verify that path is unaffected)
+- [ ] **Step 4:** Build; commit — `feat: defer document and extended-section requests to post-offer`
+
+---
+
+## Task 34: Logo — topbar and offer documents
+
+**Files:** Modify `src/layouts/Topbar.jsx` + `Topbar.module.css`, `src/pages/dashboard/OfferLetter.jsx` + its module.css, `src/pages/dashboard/print.css`, `src/pages/dashboard/ExportSummary.jsx`. Reuse `src/components/icons/LogoMark.jsx` and `src/assets/images/logo.svg`
+
+- [ ] **Step 1:** Topbar: place the H-gate mark plus the HASNI / BANK wordmark at the left, linking to `/dashboard`. On narrow widths render the mark alone. Use the gold and ivory tokens, never hardcoded hex
+- [ ] **Step 2:** OfferLetter: add the logo to the document header. Ensure `print.css` does not hide it, so the printed and saved-as-PDF letter carries the brand. This covers both the on-screen letter and the download, which is the print path
+- [ ] **Step 3:** ExportSummary: add the same header logo for a consistent client-facing document
+- [ ] **Step 4:** Build; print-preview check on the offer letter and export summary; commit — `feat: brand logo in dashboard topbar and offer documents`
+
+---
+
+## Task 35: Staff assessment reads the new fields
+
+**Files:** Modify `src/pages/admin/tabs/AssessmentTab.jsx`, `ApplicationTab.jsx`, `src/lib/assessment.js`
+
+- [ ] **Step 1:** Surface the new fields (time in operation, average monthly sales, contact block) in the application view so assessors see them alongside the existing values
+- [ ] **Step 2:** Where the pillar rollup or consistency view references financials, include monthly sales. The five-pillar rollup remains the eligibility determination; no borrower questionnaire feeds it
+- [ ] **Step 3:** Build; commit — `feat: surface new intake fields in staff assessment`
+
+---
+
+## Task 36: Cleanup, verification, push
+
+- [ ] **Step 1:** Move `INITIAL_FIELDS` out of `src/pages/wizard/ApplicationWizard.jsx` into a stable data module, repoint `ApplicationForm` and `StartApplication` imports, then remove the unused `ApplicationWizard` default component. Keep the `*Fields.jsx` step components
+- [ ] **Step 2:** `npx vitest run` all green; `npm run build` zero errors
+- [ ] **Step 3:** End-to-end manual pass: signup lands in the single form, autosave resumes on refresh, Submit works with the self-check untouched, no document upload target appears before an offer, offer letter and export show the logo, topbar shows the logo
+- [ ] **Step 4:** Copy sweep: "financing application" not "loan application", no em dashes, no promotional language, no direct-lending claims
 - [ ] **Step 5:** `git push origin main`
 
 ---

@@ -9,3 +9,4 @@ alter table public.applications
 
 comment on column public.applications.eligibility is
   'Fundability self-check result. Shape: { "answers": { "<qId>": 0|0.5|1 }, "score": number, "band": text, "completed_at": timestamptz }';
+
