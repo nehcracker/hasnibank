@@ -5,7 +5,6 @@
  * and BusinessProfileForm. No React, no Supabase.
  */
 
-import { getRequirements, deriveChecklist } from '@/data/docRequirements'
 import { getExtendedSections } from '@/data/extendedSections'
 import { PHASES } from '@/data/stageMeta'
 
@@ -31,44 +30,32 @@ export function profileCompletion(businessProfile, requiredSections = []) {
   return Math.round((done / sections.length) * 100)
 }
 
-/**
- * KYC completion derived from the document checklist.
- *
- * @param {Array} requirements  - from getRequirements(track)
- * @param {Array} documents     - application_documents rows
- * @returns {{ received: number, total: number, pct: number }}
- */
-export function kycCompletion(requirements, documents) {
-  const checklist = deriveChecklist(requirements, documents ?? [])
-  const received = checklist.filter(
-    (item) => item.status === 'received' || item.status === 'verified'
-  ).length
-  const total = checklist.length
-  const pct = total === 0 ? 0 : Math.round((received / total) * 100)
-  return { received, total, pct }
+/** True once the borrower has completed the fundability self-check. */
+export function selfCheckComplete(app) {
+  return Boolean(app?.eligibility?.completed_at)
 }
 
 /**
- * Weighted draft completion: 60% business profile, 40% required KYC.
+ * Weighted draft completion: 80% business profile, 20% self-check.
+ * Documents no longer count; they are provided on request after submission.
  *
- * @param {object} app        - application row (track, business_profile)
- * @param {Array} documents   - application_documents rows
+ * @param {object} app - application row (business_profile, required_sections, eligibility)
  * @returns {number} 0..100
  */
-export function overallDraftCompletion(app, documents) {
+export function overallDraftCompletion(app) {
   const profilePct = profileCompletion(app?.business_profile, app?.required_sections)
-  const { pct: kycPct } = kycCompletion(getRequirements(app?.track), documents)
-  return Math.round(profilePct * 0.6 + kycPct * 0.4)
+  return Math.round(profilePct * 0.8) + (selfCheckComplete(app) ? 20 : 0)
 }
 
 /**
- * Submission gate: business profile fully complete AND every required
- * KYC item received.
+ * Submission gate: business profile fully complete AND the fundability
+ * self-check completed (any score).
  */
-export function canSubmit(app, documents) {
-  if (profileCompletion(app?.business_profile, app?.required_sections) !== 100) return false
-  const { received, total } = kycCompletion(getRequirements(app?.track), documents)
-  return total > 0 && received === total
+export function canSubmit(app) {
+  return (
+    profileCompletion(app?.business_profile, app?.required_sections) === 100 &&
+    selfCheckComplete(app)
+  )
 }
 
 /**
@@ -79,14 +66,14 @@ export function canSubmit(app, documents) {
  * or the applicant responds.
  *
  * @param {Array} rfis - information_requests rows for the application
- * @returns {'draft_profile'|'draft_kyc'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'}
+ * @returns {'draft_profile'|'draft_selfcheck'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'}
  */
-export function resolveActionState(app, documents, rfis = []) {
+export function resolveActionState(app, rfis = []) {
   const status = app?.status
   if (status === 'draft') {
     return profileCompletion(app?.business_profile, app?.required_sections) < 100
       ? 'draft_profile'
-      : 'draft_kyc'
+      : 'draft_selfcheck'
   }
   if (rfis.some((r) => r.status === 'open')) {
     return 'rfi_open'

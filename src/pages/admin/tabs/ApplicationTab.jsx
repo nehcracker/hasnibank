@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { EXTENDED_SECTIONS, getExtendedSections } from '@/data/extendedSections'
+import { questions as eligibilityQuestions } from '@/data/eligibilityModel'
 import { FIELD_LABELS } from '../adminMeta'
 import styles from '../Admin.module.css'
 
@@ -160,6 +161,41 @@ export default function ApplicationTab({ application, documents, events, user, o
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Funding purpose</h2>
           <FieldRows entries={Object.entries(fields)} labels={FIELD_LABELS} />
+        </div>
+
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Fundability self-check</h2>
+          {application.eligibility ? (
+            <>
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>Score</span>
+                <span className={styles.fieldValue}>
+                  {Number(application.eligibility.score).toFixed(1)} / 10 ·{' '}
+                  {application.eligibility.band}
+                </span>
+              </div>
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>Completed</span>
+                <span className={styles.fieldValue}>
+                  {new Date(application.eligibility.completed_at).toLocaleDateString('en-US', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                  })}
+                </span>
+              </div>
+              {eligibilityQuestions.map((q) => {
+                const value = application.eligibility.answers?.[q.id]
+                const chosen = q.options.find((o) => o.value === value)
+                return (
+                  <div key={q.id} className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>{q.text}</span>
+                    <span className={styles.fieldValue}>{chosen?.label ?? 'Not answered'}</span>
+                  </div>
+                )
+              })}
+            </>
+          ) : (
+            <p className={styles.muted}>Not completed.</p>
+          )}
         </div>
 
         {getExtendedSections(requiredSections).map((section) => (

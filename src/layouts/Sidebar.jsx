@@ -35,14 +35,6 @@ function IconDocuments() {
   )
 }
 
-function IconChecklist() {
-  return (
-    <svg className={styles.icon} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path d="M2 5h3v2H2V5zm4 0h12v2H6V5zm-4 5h3v2H2v-2zm4 0h12v2H6v-2zm-4 5h3v2H2v-2zm4 0h12v2H6v-2z" />
-    </svg>
-  )
-}
-
 function IconMessages() {
   return (
     <svg className={styles.icon} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -89,7 +81,6 @@ const NAV_ITEMS = [
   { to: '/dashboard/application',             label: 'My application',       Icon: IconApplication },
   { to: '/dashboard/modelling',               label: 'Repayments',           Icon: IconModelling },
   { to: '/dashboard/documents',               label: 'Documents',            Icon: IconDocuments },
-  { to: '/dashboard/checklist',               label: 'Checklist',            Icon: IconChecklist },
   { to: '/dashboard/messages',                label: 'Messages',             Icon: IconMessages },
   { to: '/dashboard/fees',                    label: 'Fees and payments',    Icon: IconFees },
   { to: '/dashboard/eligibility',             label: 'Eligibility check',    Icon: IconEligibility },

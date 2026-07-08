@@ -9,15 +9,6 @@ const { mockUseAuth, mockUseApplication } = vi.hoisted(() => ({
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/hooks/useApplication', () => ({ useApplication: mockUseApplication }))
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: () => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: [], error: null }),
-      }),
-    }),
-  },
-}))
 
 import Overview from '../Overview'
 
@@ -87,8 +78,8 @@ test('renders draft summary with completion percentage and resume link', () => {
       progress: { registration: true, trading: true, financials: true, purpose: true },
     },
   })
-  // Full profile, no documents: 60% weighted completion
-  expect(screen.getByText(/draft · 60% complete/i)).toBeInTheDocument()
+  // Full profile, no self-check: 80% weighted completion
+  expect(screen.getByText(/draft · 80% complete/i)).toBeInTheDocument()
   expect(screen.getByText('Resume')).toBeInTheDocument()
 })
 

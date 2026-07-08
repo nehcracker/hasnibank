@@ -117,12 +117,6 @@
   text-underline-offset: 2px;
 }
 
-.allReceived {
-  font-size: var(--text-sm);
-  color: var(--color-success);
-  margin: 0;
-}
-
 /* Actions */
 .actionRow {
   display: flex;

@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth'
  * MANUAL STEP: Realtime must be enabled on `applications` in Supabase
  * Dashboard → Database → Replication for live status updates to work.
  *
- * @returns {{ application: object|null, loading: boolean, refresh: () => Promise<void> }}
+ * @returns {{ application: object|null, loading: boolean, refresh: () => Promise<void>, applyUpdate: (row: object) => void }}
  */
 // Channel topics must be unique per hook instance: supabase.channel() returns
 // the existing channel for an already-registered topic, and adding
@@ -52,6 +52,17 @@ export function useApplication() {
     refresh()
   }, [refresh])
 
+  /**
+   * Applies a row the caller already fetched (e.g. an update's `.select()`
+   * result) directly to state, with no network round trip and no `loading`
+   * toggle. Callers that autosave on a timer (BusinessProfileForm) must use
+   * this instead of refresh() — refresh()'s loading flip causes consumers
+   * that branch on `loading` to unmount their active view on every save.
+   */
+  const applyUpdate = useCallback((row) => {
+    setApplication(row)
+  }, [])
+
   // Realtime subscription — UPDATE on this user's application row
   useEffect(() => {
     if (!user) return
@@ -77,5 +88,5 @@ export function useApplication() {
     }
   }, [user])
 
-  return { application, loading, refresh }
+  return { application, loading, refresh, applyUpdate }
 }

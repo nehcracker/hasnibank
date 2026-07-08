@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { useRealtimeEvents } from '@/hooks/useRealtimeEvents'
-import { getRequirements, deriveChecklist } from '@/data/docRequirements'
+import { useRfiResponse } from '@/hooks/useRfiResponse'
 import stageMeta from '@/data/stageMeta'
 import { financingTracks } from '@/data/financingData'
 import {
@@ -130,7 +130,7 @@ function Sparkline({ principal }) {
 
 export default function MyApplication() {
   const { user, profile } = useAuth()
-  const { application, loading, refresh } = useApplication()
+  const { application, loading, refresh, applyUpdate } = useApplication()
   const { events } = useRealtimeEvents(application?.id)
 
   const [documents, setDocuments] = useState([])
@@ -159,7 +159,6 @@ export default function MyApplication() {
   const [formSection, setFormSection] = useState(null) // section key = form open
   const [submitting, setSubmitting] = useState(false)
   const [accepting, setAccepting] = useState(false)
-  const [respondingRfiId, setRespondingRfiId] = useState(null)
 
   const loadRfis = useCallback(async () => {
     if (!application?.id) return
@@ -176,6 +175,12 @@ export default function MyApplication() {
       setRfis(data ?? [])
     }
   }, [application?.id])
+
+  const { respondRfi, respondingRfiId } = useRfiResponse({
+    application,
+    user,
+    onDone: loadRfis,
+  })
 
   useEffect(() => {
     loadRfis()
@@ -237,22 +242,20 @@ export default function MyApplication() {
     return <Navigate to="/dashboard" replace />
   }
 
-  const checklist = deriveChecklist(getRequirements(application.track), documents)
-  const state = resolveActionState(application, documents, rfis)
-  const completionPct = overallDraftCompletion(application, documents)
-  const canSubmitNow = canSubmit(application, documents)
+  const state = resolveActionState(application, rfis)
+  const completionPct = overallDraftCompletion(application)
+  const canSubmitNow = canSubmit(application)
   const isDraft = application.status === 'draft'
-  const actionMode = ['draft_profile', 'draft_kyc', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
+  const actionMode = ['draft_profile', 'draft_selfcheck', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
   const openRfiCount = rfis.filter((r) => r.status === 'open').length
+  const openDocRequests = rfis.filter(
+    (r) => r.status === 'open' && r.response_type === 'document'
+  ).length
   const activeOffer =
     offers.find((o) => o.status === 'issued') ??
     offers.find((o) => o.status === 'accepted') ??
     null
 
-  const receivedCount = checklist.filter(
-    (item) => item.status === 'received' || item.status === 'verified'
-  ).length
-  const outstandingCount = checklist.length - receivedCount
   const latestMessage = events.find((ev) => ev.event_type === 'message')
 
   async function handleSubmit() {
@@ -330,60 +333,6 @@ export default function MyApplication() {
     setAccepting(false)
   }
 
-  async function handleRespondRfi(rfi, response) {
-    setRespondingRfiId(rfi.id)
-    try {
-      let responsePayload
-
-      if (response.file) {
-        const path = `${application.id}/rfi-${rfi.id}-${Date.now()}-${response.file.name}`
-        const { error: uploadError } = await supabase.storage
-          .from('application-documents')
-          .upload(path, response.file)
-        if (uploadError) throw uploadError
-
-        const { data: doc, error: docError } = await supabase
-          .from('application_documents')
-          .insert({
-            application_id: application.id,
-            document_type: 'rfi_response',
-            label: response.file.name,
-            note: 'Uploaded in response to an information request',
-            storage_path: path,
-            uploaded_by: user.id,
-          })
-          .select()
-          .single()
-        if (docError) throw docError
-        responsePayload = { document_id: doc.id, label: response.file.name }
-      } else {
-        responsePayload = { value: response.value }
-      }
-
-      const { error: updateError } = await supabase
-        .from('information_requests')
-        .update({
-          status: 'responded',
-          responded_at: new Date().toISOString(),
-          response_payload: responsePayload,
-        })
-        .eq('id', rfi.id)
-      if (updateError) throw updateError
-
-      await supabase.from('application_events').insert({
-        application_id: application.id,
-        actor_id: user.id,
-        actor_role: 'borrower',
-        event_type: 'rfi',
-        payload: { action: 'responded', prompt: rfi.prompt },
-      })
-      await loadRfis()
-    } catch (error) {
-      console.error('[MyApplication] RFI response failed:', error.message)
-    }
-    setRespondingRfiId(null)
-  }
-
   const dateLine = isDraft
     ? `Started ${new Date(application.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
     : `Submitted ${new Date(application.submitted_at ?? application.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
@@ -426,14 +375,13 @@ export default function MyApplication() {
         <BusinessProfileForm
           application={application}
           initialSection={formSection}
-          onSaved={refresh}
+          onSaved={applyUpdate}
           onClose={() => setFormSection(null)}
         />
       ) : (
         <ActionCard
           state={state}
           application={application}
-          checklist={checklist}
           completionPct={completionPct}
           canSubmitNow={canSubmitNow}
           submitting={submitting}
@@ -444,18 +392,18 @@ export default function MyApplication() {
           onResume={(section) => setFormSection(section)}
           onSubmit={handleSubmit}
           onAcceptOffer={handleAcceptOffer}
-          onRespondRfi={handleRespondRfi}
+          onRespondRfi={respondRfi}
         />
       )}
 
       {/* 4. Supporting row */}
       <div className={styles.supportRow}>
-        <Link to="/dashboard/checklist" className={styles.supportCard}>
+        <Link to="/dashboard/documents" className={styles.supportCard}>
           <h3 className={styles.supportTitle}>Documents</h3>
           <p className={styles.supportValue}>
-            {receivedCount} received
-            {outstandingCount > 0 && (
-              <span className={styles.supportMuted}>, {outstandingCount} outstanding</span>
+            {documents.length} uploaded
+            {openDocRequests > 0 && (
+              <span className={styles.supportMuted}>, {openDocRequests} requested</span>
             )}
           </p>
         </Link>
