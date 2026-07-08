@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { INITIAL_FIELDS } from '@/pages/wizard/ApplicationWizard'
-import SmeFields from '@/pages/wizard/steps/SmeFields'
+import { INITIAL_FIELDS } from '@/data/initialFields'
 import ProjectFields from '@/pages/wizard/steps/ProjectFields'
 import TradeFields from '@/pages/wizard/steps/TradeFields'
 import AcquisitionFields from '@/pages/wizard/steps/AcquisitionFields'
@@ -11,8 +10,10 @@ import styles from './BusinessProfileForm.module.css'
 
 const SECTIONS = ['registration', 'trading', 'financials', 'purpose']
 
+// SME moved to ApplicationForm's single grouped form (Phase D); this
+// component now only serves project, trade, and acquisition, which are out
+// of scope for the Phase D redesign and keep their existing field sets.
 const TRACK_FIELD_COMPONENTS = {
-  sme: SmeFields,
   project: ProjectFields,
   trade: TradeFields,
   acquisition: AcquisitionFields,
@@ -31,6 +32,10 @@ const REVENUE_BANDS = [
  * application's business_profile jsonb. Section 4 (funding purpose) reuses
  * the wizard's track-specific field components and keeps writing those
  * values to the `fields` jsonb so the admin detail view works unchanged.
+ *
+ * Phase D scope note: the SME track now uses ApplicationForm's single
+ * grouped form instead. This component remains for project, trade, and
+ * acquisition, which keep their current multi-section field sets.
  *
  * @param {object} props
  * @param {object} props.application    draft application row
@@ -193,7 +198,9 @@ export default function BusinessProfileForm({
   }
 
   const progress = businessProfile.progress ?? {}
-  const TrackFields = TRACK_FIELD_COMPONENTS[application.track] ?? SmeFields
+  // This component only renders for project, trade, and acquisition drafts
+  // (MyApplication routes SME to ApplicationForm); fall back defensively.
+  const TrackFields = TRACK_FIELD_COMPONENTS[application.track] ?? ProjectFields
   const activeExtended = extendedSections.find((s) => s.key === active)
 
   const saveLabel = useMemo(() => {

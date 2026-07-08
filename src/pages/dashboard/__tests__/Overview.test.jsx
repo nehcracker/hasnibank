@@ -74,12 +74,14 @@ test('renders draft summary with completion percentage and resume link', () => {
   setup({
     ...SAMPLE_APPLICATION,
     status: 'draft',
-    business_profile: {
-      progress: { registration: true, trading: true, financials: true, purpose: true },
+    fields: {
+      businessName: 'Acme', registrationNumber: 'RC-1',
+      businessType: 'private_limited', countryOfRegistration: 'Kenya',
+      timeInOperation: '4',
     },
   })
-  // Full profile, no self-check: 80% weighted completion
-  expect(screen.getByText(/draft · 80% complete/i)).toBeInTheDocument()
+  // 5 of 10 required SME fields filled
+  expect(screen.getByText(/draft · 50% complete/i)).toBeInTheDocument()
   expect(screen.getByText('Resume')).toBeInTheDocument()
 })
 

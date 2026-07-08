@@ -15,6 +15,7 @@ import {
 import { buildSchedule } from '@/lib/amortisation'
 import PhaseRail from './PhaseRail'
 import ActionCard from './ActionCard'
+import ApplicationForm from './ApplicationForm'
 import BusinessProfileForm from './BusinessProfileForm'
 import styles from './MyApplication.module.css'
 
@@ -156,7 +157,7 @@ export default function MyApplication() {
   useEffect(() => {
     loadOffers()
   }, [loadOffers])
-  const [formSection, setFormSection] = useState(null) // section key = form open
+  const [formOpen, setFormOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [accepting, setAccepting] = useState(false)
 
@@ -246,7 +247,7 @@ export default function MyApplication() {
   const completionPct = overallDraftCompletion(application)
   const canSubmitNow = canSubmit(application)
   const isDraft = application.status === 'draft'
-  const actionMode = ['draft_profile', 'draft_selfcheck', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
+  const actionMode = ['draft', 'rfi_open', 'offer_issued', 'fee_due'].includes(state)
   const openRfiCount = rfis.filter((r) => r.status === 'open').length
   const openDocRequests = rfis.filter(
     (r) => r.status === 'open' && r.response_type === 'document'
@@ -370,13 +371,19 @@ export default function MyApplication() {
       {/* 2. Phase rail */}
       <PhaseRail status={application.status} />
 
-      {/* 3. Action card / business profile form */}
-      {formSection && isDraft ? (
+      {/* 3. Action card / application form */}
+      {formOpen && isDraft && application.track === 'sme' ? (
+        <ApplicationForm
+          application={application}
+          profile={profile}
+          onSaved={applyUpdate}
+          onClose={() => setFormOpen(false)}
+        />
+      ) : formOpen && isDraft ? (
         <BusinessProfileForm
           application={application}
-          initialSection={formSection}
           onSaved={applyUpdate}
-          onClose={() => setFormSection(null)}
+          onClose={() => setFormOpen(false)}
         />
       ) : (
         <ActionCard
@@ -389,7 +396,7 @@ export default function MyApplication() {
           rfis={rfis}
           respondingRfiId={respondingRfiId}
           offer={activeOffer}
-          onResume={(section) => setFormSection(section)}
+          onResume={() => setFormOpen(true)}
           onSubmit={handleSubmit}
           onAcceptOffer={handleAcceptOffer}
           onRespondRfi={respondRfi}
