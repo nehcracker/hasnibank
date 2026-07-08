@@ -15,6 +15,11 @@ export const FIELD_LABELS = {
   loanPurpose: 'Financing Purpose', amountSought: 'Amount Sought',
   collateralAvailable: 'Collateral Available', collateralDescription: 'Collateral Description',
   description: 'Description',
+  // Phase D SME grouped-form keys
+  registrationNumber: 'Registration Number', timeInOperation: 'Time in Operation (years)',
+  employees: 'Number of Employees', email: 'Email', phone: 'Phone',
+  address: 'Business Address', monthlySales: 'Average Monthly Sales (USD)',
+  existingDebt: 'Existing Debt Obligations',
   projectName: 'Project Name', sector: 'Sector', fundingStructure: 'Funding Structure',
   totalProjectValue: 'Total Project Value', projectTimeline: 'Project Timeline',
   keySponsors: 'Key Sponsors',
@@ -24,6 +29,31 @@ export const FIELD_LABELS = {
   dealStructure: 'Deal Structure', totalAcquisitionValue: 'Total Acquisition Value',
   expectedClosingTimeline: 'Expected Closing',
 }
+
+/**
+ * Field grouping for the SME track's Phase D grouped application form,
+ * mirroring ApplicationForm.jsx's four groups. Used by ApplicationTab to
+ * present the applicant's submitted values in the same shape staff already
+ * see them in the mockup, rather than one flat list.
+ */
+export const SME_FIELD_GROUPS = [
+  {
+    label: 'Business',
+    keys: ['businessName', 'registrationNumber', 'businessType', 'countryOfRegistration', 'timeInOperation', 'sector', 'employees'],
+  },
+  {
+    label: 'Contact',
+    keys: ['email', 'phone', 'address'],
+  },
+  {
+    label: 'Financials',
+    keys: ['monthlySales', 'existingDebt'],
+  },
+  {
+    label: 'Financing request',
+    keys: ['loanPurpose', 'amountSought', 'description'],
+  },
+]
 
 export const EVENT_LABELS = {
   status_change:  'Status change',

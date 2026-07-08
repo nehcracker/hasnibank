@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { EXTENDED_SECTIONS, getExtendedSections } from '@/data/extendedSections'
 import { questions as eligibilityQuestions } from '@/data/eligibilityModel'
-import { FIELD_LABELS } from '../adminMeta'
+import { FIELD_LABELS, SME_FIELD_GROUPS } from '../adminMeta'
 import styles from '../Admin.module.css'
 
 const PROFILE_SECTION_META = [
@@ -26,33 +26,38 @@ const PROFILE_FIELD_LABELS = {
 /**
  * Key claims and the document expected to evidence each. Markers are set by
  * staff and persisted in application_events payloads — latest event wins.
+ * The revenue claim reads as "Declared monthly sales" for SME applications
+ * (Phase D's monthlySales field) and "Declared revenue" for the other
+ * tracks, which still submit a revenue band.
  */
-const EVIDENCE_PAIRS = [
-  {
-    key: 'registration',
-    claim: 'Registration details',
-    docType: 'certificate_of_incorporation',
-    docLabel: 'Certificate of Incorporation',
-  },
-  {
-    key: 'revenue',
-    claim: 'Declared revenue',
-    docType: 'bank_statements_12m',
-    docLabel: '12-Month Bank Statements',
-  },
-  {
-    key: 'identity',
-    claim: 'Directors and ownership',
-    docType: 'director_id',
-    docLabel: 'Director / Owner ID',
-  },
-  {
-    key: 'collateral',
-    claim: 'Collateral',
-    docType: 'ownership_evidence',
-    docLabel: 'Ownership evidence',
-  },
-]
+function evidencePairs(track) {
+  return [
+    {
+      key: 'registration',
+      claim: 'Registration details',
+      docType: 'certificate_of_incorporation',
+      docLabel: 'Certificate of Incorporation',
+    },
+    {
+      key: 'revenue',
+      claim: track === 'sme' ? 'Declared monthly sales' : 'Declared revenue',
+      docType: 'bank_statements_12m',
+      docLabel: '12-Month Bank Statements',
+    },
+    {
+      key: 'identity',
+      claim: 'Directors and ownership',
+      docType: 'director_id',
+      docLabel: 'Director / Owner ID',
+    },
+    {
+      key: 'collateral',
+      claim: 'Collateral',
+      docType: 'ownership_evidence',
+      docLabel: 'Ownership evidence',
+    },
+  ]
+}
 
 const MARKER_STATES = [
   { value: 'consistent',   label: 'Consistent' },
@@ -97,6 +102,8 @@ export default function ApplicationTab({ application, documents, events, user, o
   const businessProfile = application.business_profile ?? {}
   const requiredSections = application.required_sections ?? []
   const markers = markersFromEvents(events)
+  const isSme = application.track === 'sme'
+  const EVIDENCE_PAIRS = evidencePairs(application.track)
 
   async function setMarker(pairKey, state) {
     const { error } = await supabase.from('application_events').insert({
@@ -133,20 +140,38 @@ export default function ApplicationTab({ application, documents, events, user, o
           />
         </div>
 
-        {PROFILE_SECTION_META.map(({ key, label }) => (
-          <div key={key} className={styles.section}>
-            <h2 className={styles.sectionTitle}>{label}</h2>
-            <FieldRows
-              entries={Object.entries(businessProfile[key] ?? {})}
-              labels={PROFILE_FIELD_LABELS}
-            />
-          </div>
-        ))}
+        {isSme ? (
+          // Phase D: the SME grouped application form writes every value to
+          // `fields`; mirror ApplicationForm's four groups here so assessors
+          // see time in operation, monthly sales, and the contact block
+          // alongside the business and financing-request values.
+          SME_FIELD_GROUPS.map(({ label, keys }) => (
+            <div key={label} className={styles.section}>
+              <h2 className={styles.sectionTitle}>{label}</h2>
+              <FieldRows
+                entries={keys.map((k) => [k, fields[k]])}
+                labels={FIELD_LABELS}
+              />
+            </div>
+          ))
+        ) : (
+          <>
+            {PROFILE_SECTION_META.map(({ key, label }) => (
+              <div key={key} className={styles.section}>
+                <h2 className={styles.sectionTitle}>{label}</h2>
+                <FieldRows
+                  entries={Object.entries(businessProfile[key] ?? {})}
+                  labels={PROFILE_FIELD_LABELS}
+                />
+              </div>
+            ))}
 
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Funding purpose</h2>
-          <FieldRows entries={Object.entries(fields)} labels={FIELD_LABELS} />
-        </div>
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Funding purpose</h2>
+              <FieldRows entries={Object.entries(fields)} labels={FIELD_LABELS} />
+            </div>
+          </>
+        )}
 
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Fundability self-check</h2>
