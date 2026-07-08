@@ -4,7 +4,6 @@ import { INITIAL_FIELDS } from '@/data/initialFields'
 import ProjectFields from '@/pages/wizard/steps/ProjectFields'
 import TradeFields from '@/pages/wizard/steps/TradeFields'
 import AcquisitionFields from '@/pages/wizard/steps/AcquisitionFields'
-import { getExtendedSections } from '@/data/extendedSections'
 import { SECTION_LABELS } from './ActionCard'
 import styles from './BusinessProfileForm.module.css'
 
@@ -35,7 +34,10 @@ const REVENUE_BANDS = [
  *
  * Phase D scope note: the SME track now uses ApplicationForm's single
  * grouped form instead. This component remains for project, trade, and
- * acquisition, which keep their current multi-section field sets.
+ * acquisition, which keep their current multi-section field sets. Extended
+ * sections (shareholding, collateral, banking, track record) no longer
+ * appear here — they are staff-raised information requests after an offer,
+ * not part of the borrower's pre-submission intake.
  *
  * @param {object} props
  * @param {object} props.application    draft application row
@@ -49,9 +51,7 @@ export default function BusinessProfileForm({
   onSaved,
   onClose,
 }) {
-  // Staff can require additional intake sections; they follow the base four
-  const extendedSections = getExtendedSections(application.required_sections)
-  const allSections = [...SECTIONS, ...extendedSections.map((s) => s.key)]
+  const allSections = SECTIONS
 
   const [active, setActive] = useState(
     allSections.includes(initialSection) ? initialSection : 'registration'
@@ -159,12 +159,6 @@ export default function BusinessProfileForm({
       if (data.existingDebt === 'yes' && !data.debtDetail?.trim())
         e.debtDetail = 'Please describe your existing obligations'
     }
-    const extended = extendedSections.find((s) => s.key === section)
-    if (extended) {
-      for (const field of extended.fields) {
-        if (!String(data[field.name] ?? '').trim()) e[field.name] = 'Required'
-      }
-    }
     return e
   }
 
@@ -201,7 +195,6 @@ export default function BusinessProfileForm({
   // This component only renders for project, trade, and acquisition drafts
   // (MyApplication routes SME to ApplicationForm); fall back defensively.
   const TrackFields = TRACK_FIELD_COMPONENTS[application.track] ?? ProjectFields
-  const activeExtended = extendedSections.find((s) => s.key === active)
 
   const saveLabel = useMemo(() => {
     if (saveState === 'saving') return 'Saving...'
@@ -387,63 +380,6 @@ export default function BusinessProfileForm({
             onNext={handlePurposeComplete}
           />
         </div>
-      )}
-
-      {/* Extended sections required by the assessment team */}
-      {activeExtended && (
-        <SectionFrame title={activeExtended.label} sub={activeExtended.description}>
-          {activeExtended.fields.map((field) => (
-            <Field
-              key={field.name}
-              label={field.label}
-              error={errors[field.name]}
-            >
-              {field.type === 'textarea' ? (
-                <textarea
-                  className={styles.input}
-                  rows={3}
-                  value={businessProfile[activeExtended.key]?.[field.name] ?? ''}
-                  onChange={(e) =>
-                    setSection(activeExtended.key, { [field.name]: e.target.value })
-                  }
-                />
-              ) : field.type === 'radio' ? (
-                <div className={styles.radioGroup}>
-                  {field.options.map((v) => (
-                    <label key={v} className={styles.radioLabel}>
-                      <input
-                        type="radio"
-                        name={`${activeExtended.key}-${field.name}`}
-                        value={v}
-                        checked={businessProfile[activeExtended.key]?.[field.name] === v}
-                        onChange={() =>
-                          setSection(activeExtended.key, { [field.name]: v })
-                        }
-                      />
-                      {v === 'yes' ? 'Yes' : 'No'}
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  type={field.type === 'number' ? 'number' : 'text'}
-                  className={styles.input}
-                  value={businessProfile[activeExtended.key]?.[field.name] ?? ''}
-                  onChange={(e) =>
-                    setSection(activeExtended.key, { [field.name]: e.target.value })
-                  }
-                />
-              )}
-            </Field>
-          ))}
-          <SectionNav
-            onBack={() => {
-              const idx = allSections.indexOf(activeExtended.key)
-              setActive(allSections[idx - 1])
-            }}
-            onComplete={() => markComplete(activeExtended.key)}
-          />
-        </SectionFrame>
       )}
 
       {active !== 'purpose' && (

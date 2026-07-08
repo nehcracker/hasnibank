@@ -122,3 +122,18 @@ export function phaseFor(status) {
   const match = PHASES.find((p) => p.statuses.includes(status))
   return match ? match.phase : 1
 }
+
+/** Statuses at or beyond a formal offer being on the table. */
+const OFFER_STAGE_STATUSES = ['offer_issued', 'offer_accepted', 'fee_payment', 'funded']
+
+/**
+ * True once the application has reached offer_issued or later. Document-type
+ * information requests, and the extended-section RFI templates, are gated
+ * on this: documents are collected only once an offer is on the table
+ * (Phase D), not during the pre-submission intake or initial assessment.
+ *
+ * @param {string|undefined} status - applications.status
+ */
+export function hasReachedOffer(status) {
+  return OFFER_STAGE_STATUSES.includes(status)
+}

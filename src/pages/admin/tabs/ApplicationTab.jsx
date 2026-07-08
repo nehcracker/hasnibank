@@ -113,21 +113,6 @@ export default function ApplicationTab({ application, documents, events, user, o
     onChanged()
   }
 
-  async function toggleSection(sectionKey, enabled) {
-    const next = enabled
-      ? [...new Set([...requiredSections, sectionKey])]
-      : requiredSections.filter((k) => k !== sectionKey)
-    const { error } = await supabase
-      .from('applications')
-      .update({ required_sections: next })
-      .eq('id', application.id)
-    if (error) {
-      console.error('[ApplicationTab] required_sections update failed:', error.message)
-      return
-    }
-    onChanged()
-  }
-
   return (
     <div className={styles.appTabGrid}>
       {/* Left: everything the applicant submitted */}
@@ -246,21 +231,17 @@ export default function ApplicationTab({ application, documents, events, user, o
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Extended intake</h2>
           <p className={styles.muted}>
-            Require only what this transaction size justifies. Enabled sections
-            appear in the applicant's business profile immediately.
+            No longer collected up front. Once an offer is issued, raise any
+            of these as an information request from the Assessment tab, which
+            offers each one as a ready-made template.
           </p>
           {EXTENDED_SECTIONS.map((section) => (
-            <label key={section.key} className={styles.toggleRow}>
-              <input
-                type="checkbox"
-                checked={requiredSections.includes(section.key)}
-                onChange={(e) => toggleSection(section.key, e.target.checked)}
-              />
-              <span>
-                {section.label}
-                <span className={styles.toggleDesc}>{section.description}</span>
-              </span>
-            </label>
+            <div key={section.key} className={styles.evidenceRow}>
+              <div>
+                <p className={styles.evidenceClaim}>{section.label}</p>
+                <p className={styles.railItemMeta}>{section.description}</p>
+              </div>
+            </div>
           ))}
         </div>
       </div>

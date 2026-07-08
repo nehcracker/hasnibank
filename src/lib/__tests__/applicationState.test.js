@@ -6,6 +6,7 @@ import {
   canSubmit,
   resolveActionState,
   phaseFor,
+  hasReachedOffer,
 } from '@/lib/applicationState'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -231,4 +232,22 @@ describe('phaseFor', () => {
   ])('%s is phase %i', (status, phase) => {
     expect(phaseFor(status)).toBe(phase)
   })
+})
+
+// ── hasReachedOffer (Phase D: gates document RFIs to post-offer) ────────────
+
+describe('hasReachedOffer', () => {
+  test.each(['draft', 'submitted', 'kyc_verification', 'credit_assessment', 'funder_matching', 'term_sheet'])(
+    '%s has not reached offer',
+    (status) => {
+      expect(hasReachedOffer(status)).toBe(false)
+    }
+  )
+
+  test.each(['offer_issued', 'offer_accepted', 'fee_payment', 'funded'])(
+    '%s has reached offer',
+    (status) => {
+      expect(hasReachedOffer(status)).toBe(true)
+    }
+  )
 })

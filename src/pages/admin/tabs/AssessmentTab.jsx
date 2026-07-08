@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ASSESSMENT_PILLARS, SEVERITY_LABELS, rollupScore, gateCheck } from '@/lib/assessment'
+import { hasReachedOffer } from '@/lib/applicationState'
+import { EXTENDED_SECTIONS } from '@/data/extendedSections'
 import FindingForm from '../FindingForm'
 import RfiForm from '../RfiForm'
 import styles from '../Admin.module.css'
@@ -35,6 +37,10 @@ export default function AssessmentTab({ application, findings, notices, rfis, us
   const { byPillar } = rollupScore(findings)
   const gate = gateCheck(findings, rfis)
   const noticeByFinding = new Map(notices.map((n) => [n.finding_id, n]))
+  // Document collection, including the extended-section templates, is
+  // deferred to post-offer (Phase D) — RfiForm hides those options until
+  // an offer is on the table.
+  const documentsAllowed = hasReachedOffer(application.status)
 
   async function logEvent(eventType, payload) {
     const { error: eventError } = await supabase.from('application_events').insert({
@@ -237,6 +243,8 @@ export default function AssessmentTab({ application, findings, notices, rfis, us
           <RfiForm
             onSave={saveRfi}
             onCancel={() => setShowRfiForm(false)}
+            documentsAllowed={documentsAllowed}
+            sectionTemplates={EXTENDED_SECTIONS}
           />
         )}
 
@@ -251,6 +259,8 @@ export default function AssessmentTab({ application, findings, notices, rfis, us
                 saveLabel="Save changes"
                 onSave={saveRfi}
                 onCancel={() => setEditingRfi(null)}
+                documentsAllowed={documentsAllowed}
+                sectionTemplates={EXTENDED_SECTIONS}
               />
             ) : (
               <div key={rfi.id} className={styles.rfiRow}>
