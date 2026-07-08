@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 // ── Supabase mock that mirrors realtime-js channel semantics ────────────────
 // - channel(topic) returns the EXISTING channel instance for a topic that is
@@ -7,8 +7,13 @@ import { render, screen } from '@testing-library/react'
 // - .on('postgres_changes', ...) THROWS if called after .subscribe()
 // This is the exact behaviour that blanked the dashboard when two components
 // used useApplication (or useRealtimeEvents) with the same channel topic.
-const { mockSupabase, channels } = vi.hoisted(() => {
+const { mockSupabase, channels, mockUser } = vi.hoisted(() => {
   const channels = new Map()
+  // Stable reference: useAuth's real context returns the same user object
+  // across renders. A mock that returns a fresh literal each call gives
+  // refresh() (useCallback deps: [user]) a new identity every render,
+  // re-firing the mount effect in an infinite refetch loop.
+  const mockUser = { id: 'user-1' }
 
   function makeChannel(topic) {
     return {
@@ -52,12 +57,12 @@ const { mockSupabase, channels } = vi.hoisted(() => {
     },
   }
 
-  return { mockSupabase, channels }
+  return { mockSupabase, channels, mockUser }
 })
 
 vi.mock('@/lib/supabase', () => ({ supabase: mockSupabase }))
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({ user: { id: 'user-1' } }),
+  useAuth: () => ({ user: mockUser }),
 }))
 
 import { useApplication } from '@/hooks/useApplication'
@@ -86,5 +91,33 @@ describe('useApplication realtime subscription', () => {
 
     expect(screen.getByText('bell rendered')).toBeInTheDocument()
     expect(screen.getByText('page rendered')).toBeInTheDocument()
+  })
+})
+
+describe('useApplication applyUpdate', () => {
+  function ApplyUpdateConsumer() {
+    const { application, loading, applyUpdate } = useApplication()
+    return (
+      <div>
+        <p>loading: {String(loading)}</p>
+        <p>track: {application?.track ?? 'none'}</p>
+        <button onClick={() => applyUpdate({ id: 'app-1', track: 'project' })}>
+          apply
+        </button>
+      </div>
+    )
+  }
+
+  it('updates application state without ever setting loading — a caller that already has a fresh row must not trigger the loading placeholder in consumers', async () => {
+    render(<ApplyUpdateConsumer />)
+
+    // Initial fetch resolves (mock returns null); loading settles to false.
+    await screen.findByText('loading: false')
+
+    fireEvent.click(screen.getByRole('button', { name: 'apply' }))
+
+    // Synchronous state set — no async gap where loading could flip true.
+    expect(screen.getByText('loading: false')).toBeInTheDocument()
+    expect(screen.getByText('track: project')).toBeInTheDocument()
   })
 })

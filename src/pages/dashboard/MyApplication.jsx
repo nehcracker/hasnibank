@@ -130,7 +130,7 @@ function Sparkline({ principal }) {
 
 export default function MyApplication() {
   const { user, profile } = useAuth()
-  const { application, loading, refresh } = useApplication()
+  const { application, loading, refresh, applyUpdate } = useApplication()
   const { events } = useRealtimeEvents(application?.id)
 
   const [documents, setDocuments] = useState([])
@@ -375,7 +375,7 @@ export default function MyApplication() {
         <BusinessProfileForm
           application={application}
           initialSection={formSection}
-          onSaved={refresh}
+          onSaved={applyUpdate}
           onClose={() => setFormSection(null)}
         />
       ) : (
