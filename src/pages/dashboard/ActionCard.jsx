@@ -1,25 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import stageMeta from '@/data/stageMeta'
-import { getExtendedSections, EXTENDED_SECTION_LABELS } from '@/data/extendedSections'
 import styles from './ActionCard.module.css'
 
+// Kept for ApplicationTab and the non-SME BusinessProfileForm stepper.
 export const SECTION_LABELS = {
   registration: 'Registration details',
   trading: 'Sector and trading history',
   financials: 'Revenue and obligations',
   purpose: 'Funding purpose',
-  ...EXTENDED_SECTION_LABELS,
-}
-
-const SECTION_ORDER = ['registration', 'trading', 'financials', 'purpose']
-
-/** Base sections plus any staff-required extended sections, in form order. */
-function sectionOrderFor(application) {
-  return [
-    ...SECTION_ORDER,
-    ...getExtendedSections(application?.required_sections).map((s) => s.key),
-  ]
 }
 
 const WHILE_YOU_WAIT = [
@@ -32,35 +21,12 @@ function money(amount, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
 }
 
-function TickIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="8.5" stroke="var(--color-gold)" strokeWidth="1.5" />
-      <path
-        d="M6.5 10l2.5 2.5 4.5-4.5"
-        stroke="var(--color-gold)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function CircleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="8.5" stroke="var(--color-muted)" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
 /**
  * ActionCard — stage-aware "whose move is it" card.
  * Purely presentational; all data and mutations arrive via props.
  *
  * @param {object} props
- * @param {'draft_profile'|'draft_selfcheck'|'in_review'|'offer_issued'|'fee_due'|'funded'} props.state
+ * @param {'draft'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'} props.state
  * @param {object} props.application
  * @param {number} props.completionPct   overall draft completion 0..100
  * @param {boolean} props.canSubmitNow
@@ -68,7 +34,7 @@ function CircleIcon() {
  * @param {boolean} props.accepting
  * @param {Array}  props.rfis            information_requests rows
  * @param {string|null} props.respondingRfiId  request currently being sent
- * @param {(section: string) => void} props.onResume
+ * @param {() => void} props.onResume    opens the application form
  * @param {() => void} props.onSubmit
  * @param {() => void} props.onAcceptOffer
  * @param {(rfi: object, response: { file?: File, value?: string }) => void} props.onRespondRfi
@@ -111,8 +77,7 @@ export default function ActionCard({
 
 function CardBody(props) {
   switch (props.state) {
-    case 'draft_profile':
-    case 'draft_selfcheck':
+    case 'draft':
       return <DraftBlock {...props} />
     case 'rfi_open':
       return (
@@ -134,23 +99,9 @@ function CardBody(props) {
   }
 }
 
-/* ── Draft: profile + self-check two-column frame ──────────────────────────── */
+/* ── Draft: single "complete your application" block ───────────────────────── */
 
-function DraftBlock({
-  state,
-  application,
-  completionPct,
-  canSubmitNow,
-  submitting,
-  onResume,
-  onSubmit,
-}) {
-  const sectionOrder = sectionOrderFor(application)
-  const progress = application?.business_profile?.progress ?? {}
-  const firstIncomplete = sectionOrder.find((s) => progress[s] !== true)
-  const eligibility = application?.eligibility
-  const checkDone = Boolean(eligibility?.completed_at)
-
+function DraftBlock({ completionPct, canSubmitNow, submitting, onResume, onSubmit }) {
   return (
     <>
       <h2 className={styles.title}>Complete your application</h2>
@@ -162,85 +113,31 @@ function DraftBlock({
         <span className={styles.progressLabel}>{completionPct}% complete</span>
       </div>
 
-      <div className={styles.columns}>
-        <div className={styles.column}>
-          <h3 className={styles.columnTitle}>Part 1: Business profile</h3>
-          <ul className={styles.itemList}>
-            {sectionOrder.map((key) => (
-              <li key={key} className={styles.item}>
-                {progress[key] === true ? <TickIcon /> : <CircleIcon />}
-                <span
-                  className={
-                    progress[key] === true ? styles.itemDone : styles.itemPending
-                  }
-                >
-                  {SECTION_LABELS[key]}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className={styles.column}>
-          <h3 className={styles.columnTitle}>Part 2: Fundability self-check</h3>
-          {checkDone ? (
-            <>
-              <ul className={styles.itemList}>
-                <li className={styles.item}>
-                  <TickIcon />
-                  <span className={styles.itemDone}>
-                    Completed · {Number(eligibility.score).toFixed(1)} / 10 · {eligibility.band}
-                  </span>
-                </li>
-              </ul>
-              <Link to="/dashboard/eligibility" className={styles.moreLink}>
-                Retake the self-check
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className={styles.itemPending}>
-                A short readiness check the assessment team sees alongside your
-                profile. Any score is accepted.
-              </p>
-              <Link to="/dashboard/eligibility" className={styles.uploadLink}>
-                Run the self-check
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
+      <p className={styles.body}>
+        Business, contact, financials, and financing request, all on one form.
+        Progress saves automatically as you go.
+      </p>
 
       <div className={styles.actionRow}>
-        {state === 'draft_profile' && firstIncomplete && (
+        {canSubmitNow ? (
           <button
             type="button"
             className={styles.primaryBtn}
-            onClick={() => onResume?.(firstIncomplete)}
+            onClick={() => onSubmit?.()}
+            disabled={submitting}
           >
-            Resume: {SECTION_LABELS[firstIncomplete]}
+            {submitting ? 'Submitting...' : 'Submit application'}
+          </button>
+        ) : (
+          <button type="button" className={styles.primaryBtn} onClick={() => onResume?.()}>
+            Resume
           </button>
         )}
-        {state === 'draft_selfcheck' &&
-          (canSubmitNow ? (
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => onSubmit?.()}
-              disabled={submitting}
-            >
-              {submitting ? 'Submitting...' : 'Submit application'}
-            </button>
-          ) : (
-            <Link to="/dashboard/eligibility" className={styles.primaryBtn}>
-              Run the self-check
-            </Link>
-          ))}
       </div>
 
       <p className={styles.caption}>
-        Your progress saves automatically. Submission unlocks when both parts are
-        complete.
+        Your progress saves automatically. Submission unlocks once every
+        required field is filled in.
       </p>
     </>
   )
