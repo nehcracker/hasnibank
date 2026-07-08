@@ -2,7 +2,8 @@
  * docRequirements.js
  *
  * Pure data module — no side-effects, no React, no Supabase.
- * Consumed by DocChecklist.jsx and the test suite.
+ * Reference module retaining per-track document vocabulary;
+ * used for staff-side evidence-pairing type strings and its test suite.
  */
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
