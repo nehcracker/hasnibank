@@ -3,31 +3,50 @@
  *
  * Pure helpers shared by ActionCard, Overview, MyApplication's status pill,
  * and BusinessProfileForm. No React, no Supabase.
+ *
+ * Phase D collapses the borrower intake into one grouped application form
+ * for the SME track: the submission gate is the presence of a required set
+ * of `fields` jsonb keys, with no self-check or document dependency. The
+ * fundability self-check is an optional tool the borrower can run any time;
+ * it never blocks Submit. Project, trade, and acquisition are out of scope
+ * for this phase and keep the existing business-profile-section gate (also
+ * self-check-free, since that requirement is dropped for every track).
  */
 
-import { getExtendedSections } from '@/data/extendedSections'
 import { PHASES } from '@/data/stageMeta'
 
 /** The four base business-profile sections, in form order. */
 export const PROFILE_SECTIONS = ['registration', 'trading', 'financials', 'purpose']
 
 /**
- * Completion across the base sections plus any staff-required extended
- * sections, from the flags in business_profile.progress. With no extended
- * sections this is the original 25 points per section.
+ * Required `fields` jsonb keys for the SME grouped application form.
+ * Business, financing-request, and contact-email fields are required;
+ * sector, employees, phone, and address are optional.
+ */
+export const REQUIRED_FIELDS_SME = [
+  'businessName', 'registrationNumber', 'businessType', 'countryOfRegistration',
+  'timeInOperation', 'monthlySales', 'loanPurpose', 'amountSought',
+  'description', 'email',
+]
+
+function filled(value) {
+  return String(value ?? '').trim() !== ''
+}
+
+/**
+ * Completion across the four base business-profile sections, from the flags
+ * in business_profile.progress. 25 points per section. Extended sections no
+ * longer count toward this score (Phase D): they are staff-raised post-offer
+ * requests, not part of the borrower's pre-submission intake.
  *
  * @param {object|null|undefined} businessProfile
- * @param {string[]} [requiredSections] - applications.required_sections
+ * @param {string[]} [_requiredSections] - unused; kept for call-site compatibility
  * @returns {number} 0..100
  */
-export function profileCompletion(businessProfile, requiredSections = []) {
+export function profileCompletion(businessProfile, _requiredSections = []) {
   const progress = businessProfile?.progress ?? {}
-  const sections = [
-    ...PROFILE_SECTIONS,
-    ...getExtendedSections(requiredSections).map((s) => s.key),
-  ]
-  const done = sections.filter((s) => progress[s] === true).length
-  return Math.round((done / sections.length) * 100)
+  const done = PROFILE_SECTIONS.filter((s) => progress[s] === true).length
+  return Math.round((done / PROFILE_SECTIONS.length) * 100)
 }
 
 /** True once the borrower has completed the fundability self-check. */
@@ -36,26 +55,34 @@ export function selfCheckComplete(app) {
 }
 
 /**
- * Weighted draft completion: 80% business profile, 20% self-check.
- * Documents no longer count; they are provided on request after submission.
+ * Draft completion, as a percentage. SME: share of REQUIRED_FIELDS_SME
+ * present (non-blank) in the draft's `fields` jsonb. Other tracks: the
+ * existing business-profile section completion. The self-check never
+ * contributes to this score.
  *
- * @param {object} app - application row (business_profile, required_sections, eligibility)
+ * @param {object} app - application row (track, fields, business_profile)
  * @returns {number} 0..100
  */
 export function overallDraftCompletion(app) {
-  const profilePct = profileCompletion(app?.business_profile, app?.required_sections)
-  return Math.round(profilePct * 0.8) + (selfCheckComplete(app) ? 20 : 0)
+  if (app?.track === 'sme') {
+    const fields = app?.fields ?? {}
+    const done = REQUIRED_FIELDS_SME.filter((key) => filled(fields[key])).length
+    return Math.round((done / REQUIRED_FIELDS_SME.length) * 100)
+  }
+  return profileCompletion(app?.business_profile, app?.required_sections)
 }
 
 /**
- * Submission gate: business profile fully complete AND the fundability
- * self-check completed (any score).
+ * Submission gate. SME: every REQUIRED_FIELDS_SME key present (non-blank) in
+ * `fields` — no self-check dependency, no document dependency. Other tracks:
+ * the business profile fully complete, also with no self-check requirement.
  */
 export function canSubmit(app) {
-  return (
-    profileCompletion(app?.business_profile, app?.required_sections) === 100 &&
-    selfCheckComplete(app)
-  )
+  if (app?.track === 'sme') {
+    const fields = app?.fields ?? {}
+    return REQUIRED_FIELDS_SME.every((key) => filled(fields[key]))
+  }
+  return profileCompletion(app?.business_profile, app?.required_sections) === 100
 }
 
 /**
@@ -63,17 +90,18 @@ export function canSubmit(app) {
  *
  * Open information requests outrank every post-draft state: the applicant
  * owes a response, so the card switches to action mode until staff resolve
- * or the applicant responds.
+ * or the applicant responds. Every draft row — regardless of how much of
+ * the intake is complete — resolves to the single 'draft' state; ActionCard
+ * itself renders the completion bar and swaps the primary action between
+ * Resume and Submit application based on canSubmit.
  *
  * @param {Array} rfis - information_requests rows for the application
- * @returns {'draft_profile'|'draft_selfcheck'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'}
+ * @returns {'draft'|'rfi_open'|'in_review'|'offer_issued'|'fee_due'|'funded'}
  */
 export function resolveActionState(app, rfis = []) {
   const status = app?.status
   if (status === 'draft') {
-    return profileCompletion(app?.business_profile, app?.required_sections) < 100
-      ? 'draft_profile'
-      : 'draft_selfcheck'
+    return 'draft'
   }
   if (rfis.some((r) => r.status === 'open')) {
     return 'rfi_open'
