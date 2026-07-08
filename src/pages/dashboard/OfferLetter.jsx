@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { financingTracks } from '@/data/financingData'
+import LogoMark from '@/components/icons/LogoMark'
 import styles from './ExportSummary.module.css'
 
 const TRACK_LABELS = Object.fromEntries(financingTracks.map((t) => [t.id, t.title]))
@@ -131,8 +132,13 @@ export default function OfferLetter() {
 
       <div className={styles.document} data-print-document>
         <div className={styles.brandHeader}>
-          <p className={`${styles.wordmark} hasni-wordmark`}>Hasni Bank</p>
-          <p className={styles.tagline}>Global financing marketplace</p>
+          <div className={styles.brandRow}>
+            <LogoMark size={40} className={styles.brandMark} />
+            <div>
+              <p className={`${styles.wordmark} hasni-wordmark`}>Hasni Bank</p>
+              <p className={styles.tagline}>Global financing marketplace</p>
+            </div>
+          </div>
         </div>
 
         <div className={styles.metaRow}>

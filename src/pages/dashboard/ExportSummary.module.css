@@ -58,6 +58,16 @@
   margin-bottom: var(--space-4);
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brandMark {
+  flex-shrink: 0;
+}
+
 .wordmark {
   font-family: var(--font-heading);
   font-size: var(--text-3xl);

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import ClientIdBadge from '@/components/dashboard/ClientIdBadge'
 import NotificationsBell from '@/components/dashboard/NotificationsBell'
+import LogoMark from '@/components/icons/LogoMark'
 import styles from './Topbar.module.css'
 
 function HamburgerIcon() {
@@ -80,7 +81,11 @@ export default function Topbar({ onMenuToggle }) {
 
       {/* Brand mark */}
       <Link to="/dashboard" className={styles.brand}>
-        <span className={styles.brandName}>Hasni Bank</span>
+        <LogoMark size={32} className={styles.brandMark} />
+        <span className={styles.brandWordmark}>
+          <span className={styles.brandHasni}>HASNI</span>
+          <span className={styles.brandBank}>BANK</span>
+        </span>
       </Link>
 
       {/* Centre: Client ID badge */}

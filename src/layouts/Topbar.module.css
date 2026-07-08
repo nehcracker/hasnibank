@@ -39,17 +39,46 @@
 
 /* ── Brand mark ──────────────────────────────────── */
 .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   text-decoration: none;
   flex-shrink: 0;
 }
 
-.brandName {
+.brandMark {
+  flex-shrink: 0;
+}
+
+.brandWordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brandHasni {
   font-family: var(--font-heading);
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 600;
+  color: var(--color-ivory);
+  letter-spacing: 0.12em;
+}
+
+.brandBank {
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 300;
   color: var(--color-gold);
-  letter-spacing: -0.01em;
-  line-height: 1;
+  letter-spacing: 0.25em;
+  margin-top: 2px;
+}
+
+/* Collapse to mark-only at the sidebar's icon-rail breakpoint so the
+   topbar echoes the same "icons only" density as the collapsed sidebar. */
+@media (max-width: 1024px) {
+  .brandWordmark {
+    display: none;
+  }
 }
 
 /* ── Centre slot (ClientIdBadge) ─────────────────── */
