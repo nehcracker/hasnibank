@@ -9,14 +9,14 @@ function makeApp(overrides = {}) {
     status: 'draft',
     amount_sought: 500000,
     currency: 'USD',
-    business_profile: {},
+    fields: {},
     ...overrides,
   }
 }
 
 function setup(props = {}) {
   const defaults = {
-    state: 'draft_profile',
+    state: 'draft',
     application: makeApp(),
     completionPct: 0,
     canSubmitNow: false,
@@ -33,81 +33,46 @@ function setup(props = {}) {
   )
 }
 
-test('draft_profile shows completion bar and resume button for first incomplete section', () => {
-  setup({ state: 'draft_profile', completionPct: 10 })
+// ── draft: single state, no Part 1 / Part 2 split ────────────────────────────
+
+test('draft shows completion bar and a Resume button while incomplete', () => {
+  setup({ state: 'draft', completionPct: 30, canSubmitNow: false })
   expect(screen.getByText('Complete your application')).toBeInTheDocument()
-  expect(screen.getByText(/10% complete/i)).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: /resume: registration details/i })
-  ).toBeInTheDocument()
-  expect(
-    screen.getByText(/your progress saves automatically/i)
-  ).toBeInTheDocument()
+  expect(screen.getByText(/30% complete/i)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /^resume$/i })).toBeInTheDocument()
+  expect(screen.queryByText(/part 1/i)).not.toBeInTheDocument()
+  expect(screen.queryByText(/part 2/i)).not.toBeInTheDocument()
 })
 
-test('draft_profile resume names the first incomplete section', () => {
-  setup({
-    state: 'draft_profile',
-    application: makeApp({
-      business_profile: { progress: { registration: true, trading: true } },
-    }),
-  })
-  expect(
-    screen.getByRole('button', { name: /resume: revenue and obligations/i })
-  ).toBeInTheDocument()
+test('draft Resume button calls onResume', () => {
+  const onResume = vi.fn()
+  setup({ state: 'draft', completionPct: 30, canSubmitNow: false, onResume })
+  screen.getByRole('button', { name: /^resume$/i }).click()
+  expect(onResume).toHaveBeenCalled()
 })
 
-const COMPLETED_CHECK = {
-  answers: { q1: 1 }, score: 8.2, band: 'Application-ready',
-  completed_at: '2026-07-07T12:00:00Z',
-}
-
-const FULL_PROFILE = {
-  progress: { registration: true, trading: true, financials: true, purpose: true },
-}
-
-test('draft_profile shows the self-check as part 2 with a run link', () => {
-  setup({ state: 'draft_profile' })
-  expect(screen.getByText('Part 2: Fundability self-check')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: /run the self-check/i })).toHaveAttribute(
-    'href',
-    '/dashboard/eligibility'
-  )
-})
-
-test('draft_selfcheck without a completed check has no submit button', () => {
-  setup({
-    state: 'draft_selfcheck',
-    application: makeApp({ business_profile: FULL_PROFILE }),
-    canSubmitNow: false,
-  })
-  expect(
-    screen.queryByRole('button', { name: /submit application/i })
-  ).not.toBeInTheDocument()
-  // Primary action steers to the self-check instead
-  expect(screen.getAllByRole('link', { name: /run the self-check/i }).length).toBeGreaterThan(0)
-})
-
-test('draft_selfcheck with completed check shows score, band, and submit', () => {
+test('draft shows Submit application once canSubmitNow is true, no Resume button', () => {
   const onSubmit = vi.fn()
-  setup({
-    state: 'draft_selfcheck',
-    application: makeApp({
-      business_profile: FULL_PROFILE,
-      eligibility: COMPLETED_CHECK,
-    }),
-    canSubmitNow: true,
-    completionPct: 100,
-    onSubmit,
-  })
-  expect(screen.getByText(/8\.2 \/ 10/)).toBeInTheDocument()
-  expect(screen.getByText(/application-ready/i)).toBeInTheDocument()
+  setup({ state: 'draft', completionPct: 100, canSubmitNow: true, onSubmit })
+  expect(screen.queryByRole('button', { name: /^resume$/i })).not.toBeInTheDocument()
   const btn = screen.getByRole('button', { name: /submit application/i })
   btn.click()
   expect(onSubmit).toHaveBeenCalled()
 })
 
-test('in_review lists the three while-you-wait prompts', () => {
+test('draft submit button is disabled while submitting', () => {
+  setup({ state: 'draft', completionPct: 100, canSubmitNow: true, submitting: true })
+  expect(screen.getByRole('button', { name: /submitting/i })).toBeDisabled()
+})
+
+test('draft does not mention the self-check as a required step', () => {
+  setup({ state: 'draft', completionPct: 30, canSubmitNow: false })
+  expect(screen.queryByText(/self-check/i)).not.toBeInTheDocument()
+})
+
+// ── in_review: while-you-wait keeps the optional self-check link ─────────────
+
+test('in_review lists the three while-you-wait prompts including the self-check', () => {
   setup({
     state: 'in_review',
     application: makeApp({ status: 'credit_assessment' }),
@@ -119,6 +84,8 @@ test('in_review lists the three while-you-wait prompts', () => {
   expect(screen.getByText(/model your repayments/i)).toBeInTheDocument()
   expect(screen.getByText(/review your documents/i)).toBeInTheDocument()
 })
+
+// ── offer_issued ──────────────────────────────────────────────────────────────
 
 test('offer_issued shows offer terms and accept action', () => {
   setup({
@@ -139,6 +106,8 @@ test('offer_issued shows offer terms and accept action', () => {
   expect(screen.getByRole('button', { name: /accept offer/i })).toBeInTheDocument()
 })
 
+// ── fee_due ───────────────────────────────────────────────────────────────────
+
 test('fee_due shows pay action linking to fees', () => {
   setup({ state: 'fee_due', application: makeApp({ status: 'fee_payment' }) })
   expect(screen.getByRole('link', { name: /fees and payments/i })).toHaveAttribute(
@@ -146,6 +115,8 @@ test('fee_due shows pay action linking to fees', () => {
     '/dashboard/fees'
   )
 })
+
+// ── funded ────────────────────────────────────────────────────────────────────
 
 test('funded shows close-out with export link', () => {
   setup({ state: 'funded', application: makeApp({ status: 'funded' }) })

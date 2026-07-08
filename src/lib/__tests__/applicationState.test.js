@@ -1,16 +1,24 @@
 import { describe, expect, test } from 'vitest'
 import {
+  REQUIRED_FIELDS_SME,
   profileCompletion,
   overallDraftCompletion,
   canSubmit,
   resolveActionState,
   phaseFor,
+  hasReachedOffer,
 } from '@/lib/applicationState'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const FULL_PROGRESS = {
-  progress: { registration: true, trading: true, financials: true, purpose: true },
+const FULL_SME_FIELDS = {
+  businessName: 'Acme Traders', registrationNumber: 'RC-1234',
+  businessType: 'private_limited', countryOfRegistration: 'Kenya',
+  timeInOperation: '4', sector: 'Retail', employees: '12',
+  email: 'founder@acme.test', phone: '', address: '',
+  monthlySales: '85000', existingDebt: 'no',
+  loanPurpose: 'working_capital', amountSought: '250000',
+  description: 'Stock financing for the next quarter.',
 }
 
 function app(overrides = {}) {
@@ -18,12 +26,13 @@ function app(overrides = {}) {
     id: 'app-1',
     track: 'sme',
     status: 'draft',
+    fields: {},
     business_profile: {},
     ...overrides,
   }
 }
 
-// ── profileCompletion ─────────────────────────────────────────────────────────
+// ── profileCompletion (still used by non-SME tracks' business_profile form) ──
 
 describe('profileCompletion', () => {
   test('empty profile scores 0', () => {
@@ -32,7 +41,7 @@ describe('profileCompletion', () => {
     expect(profileCompletion(undefined)).toBe(0)
   })
 
-  test('25 points per completed section', () => {
+  test('25 points per completed base section', () => {
     expect(profileCompletion({ progress: { registration: true } })).toBe(25)
     expect(
       profileCompletion({ progress: { registration: true, trading: true } })
@@ -42,7 +51,11 @@ describe('profileCompletion', () => {
         progress: { registration: true, trading: true, financials: true },
       })
     ).toBe(75)
-    expect(profileCompletion(FULL_PROGRESS)).toBe(100)
+    expect(
+      profileCompletion({
+        progress: { registration: true, trading: true, financials: true, purpose: true },
+      })
+    ).toBe(100)
   })
 
   test('false flags do not count', () => {
@@ -50,121 +63,117 @@ describe('profileCompletion', () => {
       profileCompletion({ progress: { registration: true, trading: false } })
     ).toBe(25)
   })
-})
 
-// ── profileCompletion with extended sections (Phase C) ───────────────────────
-
-describe('profileCompletion with required_sections', () => {
-  const FULL_BASE = {
-    progress: { registration: true, trading: true, financials: true, purpose: true },
-  }
-
-  test('base sections complete but a required extended section pending is under 100', () => {
-    expect(profileCompletion(FULL_BASE, ['collateral'])).toBe(80)
-  })
-
-  test('base plus required extended section complete is 100', () => {
-    const profile = {
-      progress: { ...FULL_BASE.progress, collateral: true },
+  test('extended sections no longer affect the base score (Phase D)', () => {
+    const full = {
+      progress: { registration: true, trading: true, financials: true, purpose: true },
     }
-    expect(profileCompletion(profile, ['collateral'])).toBe(100)
-  })
-
-  test('unknown keys in required_sections are ignored', () => {
-    expect(profileCompletion(FULL_BASE, ['not_a_section'])).toBe(100)
-  })
-
-  test('draft with extended section pending stays draft_profile', () => {
-    const application = app({
-      business_profile: FULL_BASE,
-      required_sections: ['banking'],
-    })
-    expect(resolveActionState(application)).toBe('draft_profile')
+    expect(profileCompletion(full, ['collateral'])).toBe(100)
+    expect(profileCompletion(full)).toBe(100)
   })
 })
 
-const COMPLETED_CHECK = {
-  answers: { q1: 1 }, score: 8.2, band: 'Application-ready',
-  completed_at: '2026-07-07T12:00:00Z',
-}
+// ── REQUIRED_FIELDS_SME ───────────────────────────────────────────────────────
 
-// ── overallDraftCompletion ────────────────────────────────────────────────────
+describe('REQUIRED_FIELDS_SME', () => {
+  test('lists the ten required intake keys, contact email included', () => {
+    expect(REQUIRED_FIELDS_SME).toEqual([
+      'businessName', 'registrationNumber', 'businessType', 'countryOfRegistration',
+      'timeInOperation', 'monthlySales', 'loanPurpose', 'amountSought',
+      'description', 'email',
+    ])
+  })
+})
 
-describe('overallDraftCompletion', () => {
-  test('nothing done scores 0', () => {
+// ── overallDraftCompletion (SME: % of required fields filled) ────────────────
+
+describe('overallDraftCompletion — SME', () => {
+  test('nothing filled scores 0', () => {
     expect(overallDraftCompletion(app())).toBe(0)
   })
 
-  test('full profile without self-check scores 80', () => {
-    expect(overallDraftCompletion(app({ business_profile: FULL_PROGRESS }))).toBe(80)
+  test('all required fields filled scores 100', () => {
+    expect(overallDraftCompletion(app({ fields: FULL_SME_FIELDS }))).toBe(100)
   })
 
-  test('full profile with completed self-check scores 100', () => {
+  test('half the required fields filled scores 50', () => {
+    const half = {
+      businessName: 'Acme', registrationNumber: 'RC-1',
+      businessType: 'private_limited', countryOfRegistration: 'Kenya',
+      timeInOperation: '4',
+    }
+    expect(overallDraftCompletion(app({ fields: half }))).toBe(50)
+  })
+
+  test('a completed self-check does not affect the score', () => {
     expect(
       overallDraftCompletion(
-        app({ business_profile: FULL_PROGRESS, eligibility: COMPLETED_CHECK })
+        app({
+          fields: FULL_SME_FIELDS,
+          eligibility: { completed_at: '2026-07-07T12:00:00Z', score: 8.2, band: 'Application-ready' },
+        })
       )
     ).toBe(100)
   })
 
-  test('half profile without self-check scores 40', () => {
-    const halfProfile = { progress: { registration: true, trading: true } }
-    expect(overallDraftCompletion(app({ business_profile: halfProfile }))).toBe(40)
-  })
-
-  test('self-check alone scores 20', () => {
-    expect(overallDraftCompletion(app({ eligibility: COMPLETED_CHECK }))).toBe(20)
+  test('blank strings do not count as filled', () => {
+    expect(
+      overallDraftCompletion(app({ fields: { ...FULL_SME_FIELDS, businessName: '   ' } }))
+    ).toBeLessThan(100)
   })
 })
 
-// ── canSubmit ─────────────────────────────────────────────────────────────────
+// ── canSubmit — SME: required fields only, no self-check/document gate ──────
 
-describe('canSubmit', () => {
-  test('true when profile complete and self-check completed', () => {
+describe('canSubmit — SME', () => {
+  test('true once every required field is present', () => {
+    expect(canSubmit(app({ fields: FULL_SME_FIELDS }))).toBe(true)
+  })
+
+  test('true even with no self-check at all', () => {
+    expect(canSubmit(app({ fields: FULL_SME_FIELDS, eligibility: undefined }))).toBe(true)
+  })
+
+  test('false when a required field is missing', () => {
+    const { monthlySales, ...rest } = FULL_SME_FIELDS
+    expect(canSubmit(app({ fields: rest }))).toBe(false)
+  })
+
+  test('false on an empty draft', () => {
+    expect(canSubmit(app())).toBe(false)
+  })
+
+  test('phone and address are not required', () => {
     expect(
-      canSubmit(app({ business_profile: FULL_PROGRESS, eligibility: COMPLETED_CHECK }))
+      canSubmit(app({ fields: { ...FULL_SME_FIELDS, phone: '', address: '' } }))
+    ).toBe(true)
+  })
+})
+
+// ── canSubmit — non-SME tracks keep the business-profile gate, self-check optional ─
+
+describe('canSubmit — non-SME tracks', () => {
+  const FULL_PROFILE = {
+    progress: { registration: true, trading: true, financials: true, purpose: true },
+  }
+
+  test('true when the business profile is fully complete, no self-check required', () => {
+    expect(
+      canSubmit(app({ track: 'project', business_profile: FULL_PROFILE, fields: {} }))
     ).toBe(true)
   })
 
-  test('false when self-check missing', () => {
-    expect(canSubmit(app({ business_profile: FULL_PROGRESS }))).toBe(false)
-  })
-
-  test('false when profile incomplete even with self-check', () => {
-    expect(canSubmit(app({ eligibility: COMPLETED_CHECK }))).toBe(false)
-  })
-
-  test('any band passes: Not yet ready still submits', () => {
-    expect(
-      canSubmit(
-        app({
-          business_profile: FULL_PROGRESS,
-          eligibility: { ...COMPLETED_CHECK, score: 2.0, band: 'Not yet ready' },
-        })
-      )
-    ).toBe(true)
+  test('false when the business profile is incomplete', () => {
+    expect(canSubmit(app({ track: 'project', business_profile: {} }))).toBe(false)
   })
 })
 
 // ── resolveActionState ────────────────────────────────────────────────────────
 
 describe('resolveActionState', () => {
-  test('draft with incomplete profile is draft_profile', () => {
-    expect(resolveActionState(app())).toBe('draft_profile')
-  })
-
-  test('draft with complete profile is draft_selfcheck (self-check pending)', () => {
-    expect(resolveActionState(app({ business_profile: FULL_PROGRESS }))).toBe(
-      'draft_selfcheck'
-    )
-  })
-
-  test('draft stays draft_selfcheck once the check is done (submit gate)', () => {
-    expect(
-      resolveActionState(
-        app({ business_profile: FULL_PROGRESS, eligibility: COMPLETED_CHECK })
-      )
-    ).toBe('draft_selfcheck')
+  test('any draft resolves to the single draft state regardless of completion', () => {
+    expect(resolveActionState(app())).toBe('draft')
+    expect(resolveActionState(app({ fields: FULL_SME_FIELDS }))).toBe('draft')
   })
 
   test.each(['submitted', 'kyc_verification', 'credit_assessment', 'funder_matching'])(
@@ -197,7 +206,7 @@ describe('resolveActionState', () => {
   })
 
   test('draft with an open RFI keeps its draft state', () => {
-    expect(resolveActionState(app(), [openRfi])).toBe('draft_profile')
+    expect(resolveActionState(app(), [openRfi])).toBe('draft')
   })
 
   test('responded and resolved RFIs do not force action mode', () => {
@@ -223,4 +232,22 @@ describe('phaseFor', () => {
   ])('%s is phase %i', (status, phase) => {
     expect(phaseFor(status)).toBe(phase)
   })
+})
+
+// ── hasReachedOffer (Phase D: gates document RFIs to post-offer) ────────────
+
+describe('hasReachedOffer', () => {
+  test.each(['draft', 'submitted', 'kyc_verification', 'credit_assessment', 'funder_matching', 'term_sheet'])(
+    '%s has not reached offer',
+    (status) => {
+      expect(hasReachedOffer(status)).toBe(false)
+    }
+  )
+
+  test.each(['offer_issued', 'offer_accepted', 'fee_payment', 'funded'])(
+    '%s has reached offer',
+    (status) => {
+      expect(hasReachedOffer(status)).toBe(true)
+    }
+  )
 })

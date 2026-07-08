@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { useRfiResponse } from '@/hooks/useRfiResponse'
+import { hasReachedOffer } from '@/lib/applicationState'
 import styles from './DocumentsPage.module.css'
 
 function shortDate(value) {
@@ -64,6 +65,7 @@ export default function DocumentsPage() {
   })
 
   const openRequests = rfis.filter((r) => r.status === 'open')
+  const offerReached = hasReachedOffer(application?.status)
 
   if (appLoading) {
     return (
@@ -78,16 +80,18 @@ export default function DocumentsPage() {
       <span className={styles.pill}>Documents</span>
       <h1 className={styles.heading}>Documents</h1>
       <p className={styles.intro}>
-        You only upload documents when the assessment team requests them. Open
-        requests appear below with everything you have already provided.
+        {offerReached
+          ? 'You only upload documents when the assessment team requests them. Open requests appear below with everything you have already provided.'
+          : 'This page previews what will be requested. Document uploads are collected only once a financing offer has been issued.'}
       </p>
 
       <section className={styles.section} aria-label="Requested documents">
         <h2 className={styles.sectionTitle}>Requested by the assessment team</h2>
         {openRequests.length === 0 ? (
           <p className={styles.muted}>
-            Nothing is requested right now. The assessment team will ask here
-            when a document is needed.
+            {offerReached
+              ? 'Nothing is requested right now. The assessment team will ask here when a document is needed.'
+              : 'Nothing to upload yet. Document requests open once an offer is issued.'}
           </p>
         ) : (
           openRequests.map((rfi) => (

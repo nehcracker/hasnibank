@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { financingTracks } from '@/data/financingData'
+import { INITIAL_FIELDS } from '@/data/initialFields'
 import TrackSelect from '@/pages/wizard/steps/TrackSelect'
 import styles from './StartApplication.module.css'
 
@@ -56,7 +57,7 @@ export default function StartApplication() {
       amount_sought: parsed,
       currency,
       status: 'draft',
-      fields: {},
+      fields: INITIAL_FIELDS[track] ?? {},
       business_profile: {},
     })
 

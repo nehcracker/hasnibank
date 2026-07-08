@@ -209,6 +209,10 @@ export default function Eligibility() {
     <div className={styles.page}>
       <span className={styles.pill}>Eligibility check</span>
       <h1 className={styles.heading}>Fundability self-check</h1>
+      <p className={styles.disclaimer}>
+        An optional readiness tool. It is never required to submit your
+        financing application.
+      </p>
 
       <div className={styles.progressBar} role="progressbar" aria-valuenow={step + 1} aria-valuemax={questions.length}>
         <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />

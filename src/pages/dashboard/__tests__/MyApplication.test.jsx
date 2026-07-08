@@ -25,7 +25,7 @@ const { mockUseAuth, channels, DRAFT_APPLICATION, mockSupabase } = vi.hoisted(()
     status: 'draft',
     amount_sought: 500000,
     currency: 'USD',
-    business_profile: {},
+    fields: {},
     created_at: '2026-07-01T00:00:00Z',
   }
 
@@ -85,16 +85,16 @@ const { mockUseAuth, channels, DRAFT_APPLICATION, mockSupabase } = vi.hoisted(()
 vi.mock('@/hooks/useAuth', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/lib/supabase', () => ({ supabase: mockSupabase }))
 
-// BusinessProfileForm's own internals (wizard step fields, validation) are
-// covered elsewhere. Here we only need control over its onSaved callback,
-// which is the seam this regression targets.
-vi.mock('@/pages/dashboard/BusinessProfileForm', () => ({
+// ApplicationForm's own internals (fields, debounced autosave) are covered
+// elsewhere. Here we only need control over its onSaved callback, which is
+// the seam this regression targets.
+vi.mock('@/pages/dashboard/ApplicationForm', () => ({
   default: ({ onSaved }) => (
     <button
       onClick={() =>
         onSaved({
           ...DRAFT_APPLICATION,
-          business_profile: { progress: { registration: true } },
+          fields: { businessName: 'Acme Traders' },
         })
       }
     >
@@ -109,20 +109,20 @@ beforeEach(() => {
   channels.clear()
   mockUseAuth.mockReturnValue({
     user: { id: 'user-1' },
-    profile: { full_name: 'Jane Smith', client_ref: 'HB-0001' },
+    profile: { full_name: 'Jane Smith', client_ref: 'HB-0001', email: 'jane@acme.test' },
   })
 })
 
-test('autosave inside the business profile form does not blank the page to a loading state', async () => {
+test('autosave inside the application form does not blank the page to a loading state', async () => {
   render(
     <MemoryRouter>
       <MyApplication />
     </MemoryRouter>
   )
 
-  // Reach the business profile form the way a real user does: draft with an
-  // empty profile shows ActionCard's "Resume: Registration details" button.
-  const resumeBtn = await screen.findByRole('button', { name: /resume: registration details/i })
+  // Reach the application form the way a real user does: draft with nothing
+  // filled in yet shows ActionCard's "Resume" button.
+  const resumeBtn = await screen.findByRole('button', { name: /^resume$/i })
   fireEvent.click(resumeBtn)
 
   const saveBtn = await screen.findByRole('button', { name: /trigger autosave/i })
