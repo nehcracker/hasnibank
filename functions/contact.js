@@ -10,12 +10,13 @@ export async function onRequestPost(context) {
     return json({ error: 'Invalid request body' }, 400)
   }
 
-  const { fullName, companyName, email, country, fundingRequirement, financingType, projectDescription } = body
+  const { fullName, companyName, email, phone, country, fundingRequirement, financingType, projectDescription } = body
 
   const errors = {}
   if (!fullName?.trim())           errors.fullName = 'Full name is required'
   if (!companyName?.trim())        errors.companyName = 'Company name is required'
   if (!email?.trim())              errors.email = 'Email is required'
+  if (!phone?.trim())              errors.phone = 'Phone number is required'
   if (!country?.trim())            errors.country = 'Country is required'
   if (!fundingRequirement?.trim()) errors.fundingRequirement = 'Funding requirement is required'
   if (!financingType?.trim())      errors.financingType = 'Financing type is required'
@@ -36,6 +37,7 @@ export async function onRequestPost(context) {
         `Full Name:            ${fullName}`,
         `Company:              ${companyName}`,
         `Email:                ${email}`,
+        `Phone:                ${phone}`,
         `Country:              ${country}`,
         `Funding Requirement:  ${fundingRequirement}`,
         `Financing Type:       ${financingType}`,
