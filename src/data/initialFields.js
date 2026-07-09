@@ -14,7 +14,7 @@ export const INITIAL_FIELDS = {
   sme: {
     businessName: '', registrationNumber: '', businessType: '',
     countryOfRegistration: '', timeInOperation: '', sector: '', employees: '',
-    email: '', phone: '', address: '',
+    email: '', confirmEmail: '', phone: '', confirmPhone: '', address: '',
     monthlySales: '', existingDebt: '',
     loanPurpose: '', amountSought: '', description: '',
   },

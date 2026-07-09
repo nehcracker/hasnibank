@@ -54,7 +54,7 @@ test('prefills email from the profile when the draft has none yet', () => {
       profile={{ email: 'founder@acme.test' }}
     />
   )
-  expect(screen.getByLabelText(/email/i)).toHaveValue('founder@acme.test')
+  expect(screen.getByLabelText('Email')).toHaveValue('founder@acme.test')
 })
 
 test('an existing draft email overrides the profile email', () => {
@@ -64,7 +64,7 @@ test('an existing draft email overrides the profile email', () => {
       profile={{ email: 'founder@acme.test' }}
     />
   )
-  expect(screen.getByLabelText(/email/i)).toHaveValue('draft@acme.test')
+  expect(screen.getByLabelText('Email')).toHaveValue('draft@acme.test')
 })
 
 test('prefills amount sought from the application row when the draft has none yet', () => {
@@ -94,4 +94,53 @@ test('typing autosaves the merged fields jsonb after the debounce window', async
 test('no per-section mark-complete control is present; the form is continuous', () => {
   render(<ApplicationForm application={makeApp()} profile={{}} />)
   expect(screen.queryByRole('button', { name: /mark complete/i })).not.toBeInTheDocument()
+})
+
+test('shows a mismatch message when confirm email diverges from email', () => {
+  render(<ApplicationForm application={makeApp()} profile={{}} />)
+
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'founder@acme.test' },
+  })
+  fireEvent.change(screen.getByLabelText('Confirm email'), {
+    target: { value: 'typo@acme.test' },
+  })
+
+  expect(screen.getByText('Emails do not match')).toBeInTheDocument()
+})
+
+test('clears the email mismatch message once the values match', () => {
+  render(<ApplicationForm application={makeApp()} profile={{}} />)
+
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'founder@acme.test' },
+  })
+  fireEvent.change(screen.getByLabelText('Confirm email'), {
+    target: { value: 'founder@acme.test' },
+  })
+
+  expect(screen.queryByText('Emails do not match')).not.toBeInTheDocument()
+})
+
+test('shows a mismatch message when confirm phone diverges from phone', () => {
+  render(<ApplicationForm application={makeApp()} profile={{}} />)
+
+  fireEvent.change(screen.getByLabelText('Phone'), {
+    target: { value: '+254700000000' },
+  })
+  fireEvent.change(screen.getByLabelText('Confirm phone'), {
+    target: { value: '+254700000001' },
+  })
+
+  expect(screen.getByText('Phone numbers do not match')).toBeInTheDocument()
+})
+
+test('does not show a phone mismatch when phone is still blank', () => {
+  render(<ApplicationForm application={makeApp()} profile={{}} />)
+
+  fireEvent.change(screen.getByLabelText('Confirm phone'), {
+    target: { value: '+254700000001' },
+  })
+
+  expect(screen.queryByText('Phone numbers do not match')).not.toBeInTheDocument()
 })
