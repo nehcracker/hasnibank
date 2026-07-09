@@ -15,7 +15,8 @@ const FULL_SME_FIELDS = {
   businessName: 'Acme Traders', registrationNumber: 'RC-1234',
   businessType: 'private_limited', countryOfRegistration: 'Kenya',
   timeInOperation: '4', sector: 'Retail', employees: '12',
-  email: 'founder@acme.test', phone: '', address: '',
+  email: 'founder@acme.test', confirmEmail: 'founder@acme.test',
+  phone: '', confirmPhone: '', address: '',
   monthlySales: '85000', existingDebt: 'no',
   loanPurpose: 'working_capital', amountSought: '250000',
   description: 'Stock financing for the next quarter.',
@@ -76,11 +77,11 @@ describe('profileCompletion', () => {
 // ── REQUIRED_FIELDS_SME ───────────────────────────────────────────────────────
 
 describe('REQUIRED_FIELDS_SME', () => {
-  test('lists the ten required intake keys, contact email included', () => {
+  test('lists the eleven required intake keys, contact email and its confirmation included', () => {
     expect(REQUIRED_FIELDS_SME).toEqual([
       'businessName', 'registrationNumber', 'businessType', 'countryOfRegistration',
       'timeInOperation', 'monthlySales', 'loanPurpose', 'amountSought',
-      'description', 'email',
+      'description', 'email', 'confirmEmail',
     ])
   })
 })
@@ -96,13 +97,13 @@ describe('overallDraftCompletion — SME', () => {
     expect(overallDraftCompletion(app({ fields: FULL_SME_FIELDS }))).toBe(100)
   })
 
-  test('half the required fields filled scores 50', () => {
+  test('half the required fields filled scores 45 (6 of 11 fields)', () => {
     const half = {
       businessName: 'Acme', registrationNumber: 'RC-1',
       businessType: 'private_limited', countryOfRegistration: 'Kenya',
-      timeInOperation: '4',
+      timeInOperation: '4', email: 'test@acme.test',
     }
-    expect(overallDraftCompletion(app({ fields: half }))).toBe(50)
+    expect(overallDraftCompletion(app({ fields: half }))).toBe(Math.round((6 / 11) * 100))
   })
 
   test('a completed self-check does not affect the score', () => {
@@ -146,6 +147,38 @@ describe('canSubmit — SME', () => {
   test('phone and address are not required', () => {
     expect(
       canSubmit(app({ fields: { ...FULL_SME_FIELDS, phone: '', address: '' } }))
+    ).toBe(true)
+  })
+
+  test('false when confirmEmail does not match email', () => {
+    expect(
+      canSubmit(app({ fields: { ...FULL_SME_FIELDS, confirmEmail: 'typo@acme.test' } }))
+    ).toBe(false)
+  })
+
+  test('false when phone is filled but confirmPhone does not match', () => {
+    expect(
+      canSubmit(
+        app({
+          fields: { ...FULL_SME_FIELDS, phone: '+254700000000', confirmPhone: '+254700000001' },
+        })
+      )
+    ).toBe(false)
+  })
+
+  test('true when phone and confirmPhone match', () => {
+    expect(
+      canSubmit(
+        app({
+          fields: { ...FULL_SME_FIELDS, phone: '+254700000000', confirmPhone: '+254700000000' },
+        })
+      )
+    ).toBe(true)
+  })
+
+  test('true when phone is blank, regardless of confirmPhone', () => {
+    expect(
+      canSubmit(app({ fields: { ...FULL_SME_FIELDS, phone: '', confirmPhone: '' } }))
     ).toBe(true)
   })
 })

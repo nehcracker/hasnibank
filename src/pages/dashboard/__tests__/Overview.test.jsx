@@ -80,8 +80,8 @@ test('renders draft summary with completion percentage and resume link', () => {
       timeInOperation: '4',
     },
   })
-  // 5 of 10 required SME fields filled
-  expect(screen.getByText(/draft · 50% complete/i)).toBeInTheDocument()
+  // 5 of 11 required SME fields filled
+  expect(screen.getByText(/draft · 45% complete/i)).toBeInTheDocument()
   expect(screen.getByText('Resume')).toBeInTheDocument()
 })
 

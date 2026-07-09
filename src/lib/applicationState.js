@@ -20,13 +20,14 @@ export const PROFILE_SECTIONS = ['registration', 'trading', 'financials', 'purpo
 
 /**
  * Required `fields` jsonb keys for the SME grouped application form.
- * Business, financing-request, and contact-email fields are required;
- * sector, employees, phone, and address are optional.
+ * Business, financing-request, and contact-email (plus its confirmation)
+ * fields are required; sector, employees, phone, and address are optional.
+ * Phone confirmation is conditionally required — see canSubmit().
  */
 export const REQUIRED_FIELDS_SME = [
   'businessName', 'registrationNumber', 'businessType', 'countryOfRegistration',
   'timeInOperation', 'monthlySales', 'loanPurpose', 'amountSought',
-  'description', 'email',
+  'description', 'email', 'confirmEmail',
 ]
 
 function filled(value) {
@@ -74,13 +75,18 @@ export function overallDraftCompletion(app) {
 
 /**
  * Submission gate. SME: every REQUIRED_FIELDS_SME key present (non-blank) in
- * `fields` — no self-check dependency, no document dependency. Other tracks:
- * the business profile fully complete, also with no self-check requirement.
+ * `fields`, confirmEmail matching email, and — if phone is filled —
+ * confirmPhone matching phone. No self-check dependency, no document
+ * dependency. Other tracks: the business profile fully complete, also with
+ * no self-check requirement.
  */
 export function canSubmit(app) {
   if (app?.track === 'sme') {
     const fields = app?.fields ?? {}
-    return REQUIRED_FIELDS_SME.every((key) => filled(fields[key]))
+    const requiredOk = REQUIRED_FIELDS_SME.every((key) => filled(fields[key]))
+    const emailMatches = fields.confirmEmail === fields.email
+    const phoneMatches = !filled(fields.phone) || fields.confirmPhone === fields.phone
+    return requiredOk && emailMatches && phoneMatches
   }
   return profileCompletion(app?.business_profile, app?.required_sections) === 100
 }
