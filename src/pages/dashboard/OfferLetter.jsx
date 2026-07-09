@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useApplication } from '@/hooks/useApplication'
 import { financingTracks } from '@/data/financingData'
 import LogoMark from '@/components/icons/LogoMark'
+import logoSrc from '@/assets/Logo.png'
 import styles from './ExportSummary.module.css'
 
 const TRACK_LABELS = Object.fromEntries(financingTracks.map((t) => [t.id, t.title]))
@@ -235,6 +236,13 @@ export default function OfferLetter() {
       </div>
 
       <div className={styles.document} data-print-document>
+        <img
+          src={logoSrc}
+          alt=""
+          aria-hidden="true"
+          data-testid="document-watermark"
+          className={styles.watermark}
+        />
         <div className={styles.brandHeader}>
           <div className={styles.brandRow}>
             <LogoMark size={40} className={styles.brandMark} />
