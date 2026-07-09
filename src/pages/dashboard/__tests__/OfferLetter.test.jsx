@@ -32,6 +32,7 @@ vi.mock('@/hooks/useApplication', () => ({
 }))
 
 import OfferLetter from '../OfferLetter'
+import styles from '../ExportSummary.module.css'
 
 import {
   instalmentDetails,
@@ -181,10 +182,13 @@ test('renders default charges, prepayment, and disclosure sections when present'
 
 test('renders the marketing logo as a watermark behind the document content', async () => {
   setOffer({ id: 'offer-1', version: 1, status: 'issued', terms: BASE_TERMS })
-  render(<OfferLetter />)
+  const { container } = render(<OfferLetter />)
   await screen.findByText('Instalment amount: $8,884.88 per month.')
   const watermark = screen.getByTestId('document-watermark')
   expect(watermark.tagName).toBe('IMG')
   expect(watermark).toHaveAttribute('alt', '')
   expect(watermark).toHaveAttribute('aria-hidden', 'true')
+  expect(watermark.className).toBe(styles.watermark)
+  const documentEl = container.querySelector('[data-print-document]')
+  expect(documentEl.firstElementChild).toBe(watermark)
 })

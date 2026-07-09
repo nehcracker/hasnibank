@@ -27,9 +27,10 @@ vi.mock('@/hooks/useApplication', () => ({
 }))
 
 import ExportSummary from '../ExportSummary'
+import styles from '../ExportSummary.module.css'
 
 test('renders the marketing logo as a watermark behind the document content', () => {
-  render(
+  const { container } = render(
     <MemoryRouter>
       <ExportSummary />
     </MemoryRouter>
@@ -38,4 +39,7 @@ test('renders the marketing logo as a watermark behind the document content', ()
   expect(watermark.tagName).toBe('IMG')
   expect(watermark).toHaveAttribute('alt', '')
   expect(watermark).toHaveAttribute('aria-hidden', 'true')
+  expect(watermark.className).toBe(styles.watermark)
+  const documentEl = container.querySelector('[data-print-document]')
+  expect(documentEl.firstElementChild).toBe(watermark)
 })
