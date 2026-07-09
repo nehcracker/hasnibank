@@ -5,6 +5,7 @@ import { useApplication } from '@/hooks/useApplication'
 import stageMeta from '@/data/stageMeta'
 import { financingTracks } from '@/data/financingData'
 import LogoMark from '@/components/icons/LogoMark'
+import logoSrc from '@/assets/Logo.png'
 import styles from './ExportSummary.module.css'
 
 // FIELD_LABELS mirrors src/pages/admin/AdminApplication.jsx.
@@ -116,6 +117,13 @@ export default function ExportSummary() {
 
       {/* Document card */}
       <div className={styles.document} data-print-document>
+        <img
+          src={logoSrc}
+          alt=""
+          aria-hidden="true"
+          data-testid="document-watermark"
+          className={styles.watermark}
+        />
         {/* Brand header */}
         <div className={styles.brandHeader}>
           <div className={styles.brandRow}>
