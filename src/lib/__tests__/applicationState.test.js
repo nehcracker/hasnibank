@@ -97,13 +97,13 @@ describe('overallDraftCompletion — SME', () => {
     expect(overallDraftCompletion(app({ fields: FULL_SME_FIELDS }))).toBe(100)
   })
 
-  test('half the required fields filled scores 45 (6 of 11 fields)', () => {
+  test('5 of 11 required fields filled scores 45', () => {
     const half = {
       businessName: 'Acme', registrationNumber: 'RC-1',
       businessType: 'private_limited', countryOfRegistration: 'Kenya',
-      timeInOperation: '4', email: 'test@acme.test',
+      timeInOperation: '4',
     }
-    expect(overallDraftCompletion(app({ fields: half }))).toBe(Math.round((6 / 11) * 100))
+    expect(overallDraftCompletion(app({ fields: half }))).toBe(45)
   })
 
   test('a completed self-check does not affect the score', () => {
