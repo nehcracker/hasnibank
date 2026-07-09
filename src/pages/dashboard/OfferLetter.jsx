@@ -285,6 +285,11 @@ export default function OfferLetter() {
               <span className={styles.fieldValue}>{value}</span>
             </div>
           ))}
+          {instalmentLine(terms) && (
+            <p className={styles.fieldValue} style={{ marginTop: 'var(--space-3)' }}>
+              {instalmentLine(terms)}
+            </p>
+          )}
         </section>
 
         {fees.length > 0 && (
@@ -323,6 +328,36 @@ export default function OfferLetter() {
                 <span className={styles.fieldValue}>{c}</span>
               </div>
             ))}
+          </section>
+        )}
+
+        {describeDefaultCharges(terms.default_charges, terms.currency) && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Default charges</h2>
+            <p className={styles.fieldValue}>
+              {describeDefaultCharges(terms.default_charges, terms.currency)}
+            </p>
+          </section>
+        )}
+
+        {describePrepayment(terms.prepayment) && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Prepayment</h2>
+            <p className={styles.fieldValue}>{describePrepayment(terms.prepayment)}</p>
+          </section>
+        )}
+
+        {terms.security_description && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Security and collateral</h2>
+            <p className={styles.fieldValue}>{terms.security_description}</p>
+          </section>
+        )}
+
+        {terms.insurance_requirements && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Insurance requirements</h2>
+            <p className={styles.fieldValue}>{terms.insurance_requirements}</p>
           </section>
         )}
 

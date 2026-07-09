@@ -1,3 +1,38 @@
+import { render, screen } from '@testing-library/react'
+
+const { APPLICATION, mockSupabase, setOffer } = vi.hoisted(() => {
+  const APPLICATION = { id: 'app-1', track: 'sme' }
+  let currentOffer = null
+  const mockSupabase = {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          in: () => ({
+            order: () => ({
+              limit: () => ({
+                maybeSingle: () => Promise.resolve({ data: currentOffer, error: null }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  }
+  return { APPLICATION, mockSupabase, setOffer: (o) => { currentOffer = o } }
+})
+
+vi.mock('@/lib/supabase', () => ({ supabase: mockSupabase }))
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    profile: { client_ref: 'HB-2026-00100', full_name: 'Aminata Koroma', company_name: 'Solari AgroExports Ltd' },
+  }),
+}))
+vi.mock('@/hooks/useApplication', () => ({
+  useApplication: () => ({ application: APPLICATION, loading: false }),
+}))
+
+import OfferLetter from '../OfferLetter'
+
 import {
   instalmentDetails,
   instalmentLine,
@@ -95,4 +130,51 @@ test('describePrepayment reports early settlement is not permitted', () => {
 
 test('describePrepayment returns null when absent', () => {
   expect(describePrepayment(null)).toBeNull()
+})
+
+const BASE_TERMS = {
+  principal: 100000, currency: 'USD', annual_rate_pct: 12, term_months: 12,
+  repayment_frequency: 'monthly', structure: 'amortising', grace_months: 0, balloon_pct: 0,
+  fees: [], conditions_precedent: [], covenants: [],
+}
+
+test('shows the instalment amount for the active offer', async () => {
+  setOffer({ id: 'offer-1', version: 1, status: 'issued', terms: BASE_TERMS })
+  render(<OfferLetter />)
+  expect(await screen.findByText('Instalment amount: $8,884.88 per month.')).toBeInTheDocument()
+})
+
+test('omits default charges, prepayment, and disclosure sections for offers issued before this change', async () => {
+  setOffer({ id: 'offer-1', version: 1, status: 'issued', terms: BASE_TERMS })
+  render(<OfferLetter />)
+  await screen.findByText('Instalment amount: $8,884.88 per month.')
+  expect(screen.queryByText('Default charges')).not.toBeInTheDocument()
+  expect(screen.queryByText('Prepayment')).not.toBeInTheDocument()
+  expect(screen.queryByText('Security and collateral')).not.toBeInTheDocument()
+  expect(screen.queryByText('Insurance requirements')).not.toBeInTheDocument()
+})
+
+test('renders default charges, prepayment, and disclosure sections when present', async () => {
+  setOffer({
+    id: 'offer-1',
+    version: 1,
+    status: 'issued',
+    terms: {
+      ...BASE_TERMS,
+      default_charges: { late_fee: { type: 'flat', value: 150 }, penalty_rate_pct: 3, grace_days: 10 },
+      prepayment: { allowed: true, penalty_pct_of_remaining_principal: 1.5 },
+      security_description: 'General security agreement over business assets.',
+      insurance_requirements: 'Comprehensive trade credit insurance.',
+    },
+  })
+  render(<OfferLetter />)
+  await screen.findByText('Instalment amount: $8,884.88 per month.')
+  expect(screen.getByText('Default charges')).toBeInTheDocument()
+  expect(screen.getByText(/a late fee of \$150\.00 and a penalty rate of 3% per annum/)).toBeInTheDocument()
+  expect(screen.getByText('Prepayment')).toBeInTheDocument()
+  expect(screen.getByText(/subject to a penalty of 1\.5% of the remaining principal/)).toBeInTheDocument()
+  expect(screen.getByText('Security and collateral')).toBeInTheDocument()
+  expect(screen.getByText('General security agreement over business assets.')).toBeInTheDocument()
+  expect(screen.getByText('Insurance requirements')).toBeInTheDocument()
+  expect(screen.getByText('Comprehensive trade credit insurance.')).toBeInTheDocument()
 })
