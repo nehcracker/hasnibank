@@ -178,3 +178,13 @@ test('renders default charges, prepayment, and disclosure sections when present'
   expect(screen.getByText('Insurance requirements')).toBeInTheDocument()
   expect(screen.getByText('Comprehensive trade credit insurance.')).toBeInTheDocument()
 })
+
+test('renders the marketing logo as a watermark behind the document content', async () => {
+  setOffer({ id: 'offer-1', version: 1, status: 'issued', terms: BASE_TERMS })
+  render(<OfferLetter />)
+  await screen.findByText('Instalment amount: $8,884.88 per month.')
+  const watermark = screen.getByTestId('document-watermark')
+  expect(watermark.tagName).toBe('IMG')
+  expect(watermark).toHaveAttribute('alt', '')
+  expect(watermark).toHaveAttribute('aria-hidden', 'true')
+})
