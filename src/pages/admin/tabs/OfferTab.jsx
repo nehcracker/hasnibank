@@ -42,7 +42,7 @@ function shortDate(value) {
 }
 
 /** Builder form state from stored offer terms (or application defaults). */
-function formFromTerms(application, terms) {
+export function formFromTerms(application, terms) {
   return {
     principal: String(terms?.principal ?? application.amount_sought ?? ''),
     currency: terms?.currency ?? application.currency ?? 'USD',
@@ -55,11 +55,19 @@ function formFromTerms(application, terms) {
     fees: terms?.fees ?? [],
     conditions: terms?.conditions_precedent ?? [],
     covenants: terms?.covenants ?? [],
+    lateFeeType: terms?.default_charges?.late_fee?.type ?? 'flat',
+    lateFeeValue: String(terms?.default_charges?.late_fee?.value ?? ''),
+    penaltyRatePct: String(terms?.default_charges?.penalty_rate_pct ?? ''),
+    graceDays: String(terms?.default_charges?.grace_days ?? 10),
+    prepaymentAllowed: terms?.prepayment?.allowed ?? true,
+    prepaymentPenaltyPct: String(terms?.prepayment?.penalty_pct_of_remaining_principal ?? 0),
+    securityDescription: terms?.security_description ?? '',
+    insuranceRequirements: terms?.insurance_requirements ?? '',
   }
 }
 
 /** Stored offer_terms shape from builder form state. */
-function termsFromForm(form) {
+export function termsFromForm(form) {
   return {
     principal: Number(form.principal),
     currency: form.currency,
@@ -72,6 +80,19 @@ function termsFromForm(form) {
     fees: form.fees.filter((f) => f.label.trim()),
     conditions_precedent: form.conditions.filter((c) => c.trim()),
     covenants: form.covenants.filter((c) => c.trim()),
+    default_charges: {
+      late_fee: { type: form.lateFeeType, value: Number(form.lateFeeValue) || 0 },
+      penalty_rate_pct: Number(form.penaltyRatePct) || 0,
+      grace_days: Number(form.graceDays) || 0,
+    },
+    prepayment: {
+      allowed: form.prepaymentAllowed,
+      penalty_pct_of_remaining_principal: form.prepaymentAllowed
+        ? Number(form.prepaymentPenaltyPct) || 0
+        : 0,
+    },
+    security_description: form.securityDescription.trim(),
+    insurance_requirements: form.insuranceRequirements.trim(),
   }
 }
 
