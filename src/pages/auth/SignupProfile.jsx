@@ -11,6 +11,7 @@ export default function SignupProfile() {
   const [companyName, setCompanyName] = useState('')
   const [country, setCountry] = useState('')
   const [phone, setPhone] = useState('')
+  const [confirmPhone, setConfirmPhone] = useState('')
   const [occupation, setOccupation] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -22,6 +23,12 @@ export default function SignupProfile() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+
+    if (phone.trim() !== confirmPhone.trim()) {
+      setError('Phone numbers do not match')
+      return
+    }
+
     setLoading(true)
 
     const { error } = await supabase.from('profiles').insert({
@@ -104,6 +111,19 @@ export default function SignupProfile() {
               required
               value={phone}
               onChange={e => setPhone(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="confirmPhone">Confirm phone</label>
+            <input
+              id="confirmPhone"
+              className={styles.input}
+              type="tel"
+              autoComplete="tel"
+              required
+              value={confirmPhone}
+              onChange={e => setConfirmPhone(e.target.value)}
             />
           </div>
 
