@@ -20,7 +20,8 @@ const financingTypes = [
 ]
 
 const INITIAL = {
-  fullName: '', companyName: '', email: '', country: '',
+  fullName: '', companyName: '', email: '', confirmEmail: '',
+  phone: '', confirmPhone: '', country: '',
   fundingRequirement: '', financingType: '', projectDescription: '',
 }
 
@@ -35,6 +36,13 @@ export default function Contact() {
     if (!data.fullName.trim())           errs.fullName = 'Full name is required'
     if (!data.companyName.trim())        errs.companyName = 'Company name is required'
     if (!data.email.trim())              errs.email = 'Email is required'
+    if (!data.confirmEmail.trim())       errs.confirmEmail = 'Please confirm your email'
+    else if (data.confirmEmail.trim().toLowerCase() !== data.email.trim().toLowerCase())
+                                          errs.confirmEmail = 'Emails do not match'
+    if (!data.phone.trim())              errs.phone = 'Phone number is required'
+    if (!data.confirmPhone.trim())       errs.confirmPhone = 'Please confirm your phone number'
+    else if (data.confirmPhone.trim() !== data.phone.trim())
+                                          errs.confirmPhone = 'Phone numbers do not match'
     if (!data.country.trim())            errs.country = 'Country is required'
     if (!data.fundingRequirement.trim()) errs.fundingRequirement = 'Funding requirement is required'
     if (!data.financingType)             errs.financingType = 'Please select a financing type'
@@ -54,11 +62,12 @@ export default function Contact() {
     if (Object.keys(errs).length) { setErrors(errs); return }
 
     setStatus('loading')
+    const { confirmEmail, confirmPhone, ...payload } = form
     try {
       const res = await fetch('/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       if (res.ok) {
         setStatus('success')
@@ -114,10 +123,17 @@ export default function Contact() {
               </div>
               <div className={styles.row}>
                 <Field label="Email Address" name="email" type="email" value={form.email} onChange={handleChange} error={errors.email} />
-                <Field label="Country" name="country" value={form.country} onChange={handleChange} error={errors.country} />
+                <Field label="Confirm Email Address" name="confirmEmail" type="email" value={form.confirmEmail} onChange={handleChange} error={errors.confirmEmail} />
               </div>
               <div className={styles.row}>
+                <Field label="Phone Number" name="phone" type="tel" value={form.phone} onChange={handleChange} error={errors.phone} />
+                <Field label="Confirm Phone Number" name="confirmPhone" type="tel" value={form.confirmPhone} onChange={handleChange} error={errors.confirmPhone} />
+              </div>
+              <div className={styles.row}>
+                <Field label="Country" name="country" value={form.country} onChange={handleChange} error={errors.country} />
                 <Field label="Funding Requirement (e.g. $2M working capital)" name="fundingRequirement" value={form.fundingRequirement} onChange={handleChange} error={errors.fundingRequirement} />
+              </div>
+              <div className={styles.row}>
                 <div className={styles.fieldGroup}>
                   <label htmlFor="financingType" className={styles.label}>Financing Type</label>
                   <select
