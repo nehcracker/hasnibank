@@ -42,7 +42,7 @@ function shortDate(value) {
 }
 
 /** Builder form state from stored offer terms (or application defaults). */
-function formFromTerms(application, terms) {
+export function formFromTerms(application, terms) {
   return {
     principal: String(terms?.principal ?? application.amount_sought ?? ''),
     currency: terms?.currency ?? application.currency ?? 'USD',
@@ -55,11 +55,19 @@ function formFromTerms(application, terms) {
     fees: terms?.fees ?? [],
     conditions: terms?.conditions_precedent ?? [],
     covenants: terms?.covenants ?? [],
+    lateFeeType: terms?.default_charges?.late_fee?.type ?? 'flat',
+    lateFeeValue: String(terms?.default_charges?.late_fee?.value ?? ''),
+    penaltyRatePct: String(terms?.default_charges?.penalty_rate_pct ?? ''),
+    graceDays: String(terms?.default_charges?.grace_days ?? 10),
+    prepaymentAllowed: terms?.prepayment?.allowed ?? true,
+    prepaymentPenaltyPct: String(terms?.prepayment?.penalty_pct_of_remaining_principal ?? 0),
+    securityDescription: terms?.security_description ?? '',
+    insuranceRequirements: terms?.insurance_requirements ?? '',
   }
 }
 
 /** Stored offer_terms shape from builder form state. */
-function termsFromForm(form) {
+export function termsFromForm(form) {
   return {
     principal: Number(form.principal),
     currency: form.currency,
@@ -72,6 +80,19 @@ function termsFromForm(form) {
     fees: form.fees.filter((f) => f.label.trim()),
     conditions_precedent: form.conditions.filter((c) => c.trim()),
     covenants: form.covenants.filter((c) => c.trim()),
+    default_charges: {
+      late_fee: { type: form.lateFeeType, value: Number(form.lateFeeValue) || 0 },
+      penalty_rate_pct: Number(form.penaltyRatePct) || 0,
+      grace_days: Number(form.graceDays) || 0,
+    },
+    prepayment: {
+      allowed: form.prepaymentAllowed,
+      penalty_pct_of_remaining_principal: form.prepaymentAllowed
+        ? Number(form.prepaymentPenaltyPct) || 0
+        : 0,
+    },
+    security_description: form.securityDescription.trim(),
+    insurance_requirements: form.insuranceRequirements.trim(),
   }
 }
 
@@ -393,6 +414,93 @@ export default function OfferTab({ application, offers, user, onChanged }) {
             onChange={(covenants) => setForm((prev) => ({ ...prev, covenants }))}
             placeholder="e.g. Quarterly management accounts"
           />
+        </div>
+
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <div>
+            <div className={styles.fieldLabelSm}>Late fee</div>
+            <select className={styles.stageSelect} value={form.lateFeeType} onChange={set('lateFeeType')}>
+              <option value="flat">Flat amount</option>
+              <option value="percent_of_instalment">Percent of instalment</option>
+            </select>
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>
+              {form.lateFeeType === 'flat' ? 'Late fee amount' : 'Late fee %'}
+            </div>
+            <input
+              type="number"
+              step="0.1"
+              className={styles.stageSelect}
+              value={form.lateFeeValue}
+              onChange={set('lateFeeValue')}
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Penalty rate % (per annum, on overdue balance)</div>
+            <input
+              type="number"
+              step="0.1"
+              className={styles.stageSelect}
+              value={form.penaltyRatePct}
+              onChange={set('penaltyRatePct')}
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Grace days before charges apply</div>
+            <input
+              type="number"
+              min="0"
+              className={styles.stageSelect}
+              value={form.graceDays}
+              onChange={set('graceDays')}
+            />
+          </div>
+        </div>
+
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <label className={styles.toggleRow}>
+            <input
+              type="checkbox"
+              checked={form.prepaymentAllowed}
+              onChange={(e) => setForm((prev) => ({ ...prev, prepaymentAllowed: e.target.checked }))}
+            />
+            Early settlement permitted
+          </label>
+          {form.prepaymentAllowed && (
+            <div>
+              <div className={styles.fieldLabelSm}>Prepayment penalty % of remaining principal</div>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                className={styles.stageSelect}
+                value={form.prepaymentPenaltyPct}
+                onChange={set('prepaymentPenaltyPct')}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <div>
+            <div className={styles.fieldLabelSm}>Security and collateral</div>
+            <textarea
+              className={styles.noteField}
+              value={form.securityDescription}
+              onChange={set('securityDescription')}
+              placeholder="e.g. General security agreement over business assets"
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Insurance requirements</div>
+            <textarea
+              className={styles.noteField}
+              value={form.insuranceRequirements}
+              onChange={set('insuranceRequirements')}
+              placeholder="e.g. Comprehensive trade credit insurance naming Hasni Bank as loss payee"
+            />
+          </div>
         </div>
 
         {preview && (

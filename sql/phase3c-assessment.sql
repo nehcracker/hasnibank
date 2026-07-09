@@ -177,7 +177,10 @@ create table if not exists public.offers (
   id             uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.applications(id) on delete cascade,
   version        int  not null default 1,
-  terms          jsonb not null, -- offer_terms shape + fees[], conditions_precedent[], covenants[]
+  terms          jsonb not null, -- offer_terms shape + fees[], conditions_precedent[], covenants[],
+                                  -- default_charges{late_fee{type,value},penalty_rate_pct,grace_days},
+                                  -- prepayment{allowed,penalty_pct_of_remaining_principal},
+                                  -- security_description, insurance_requirements
   valid_until    date,
   status         text not null default 'draft' check (status in
                    ('draft','issued','superseded','accepted','declined','expired')),

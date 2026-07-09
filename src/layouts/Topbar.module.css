@@ -73,11 +73,29 @@
   margin-top: 2px;
 }
 
-/* Collapse to mark-only at the sidebar's icon-rail breakpoint so the
-   topbar echoes the same "icons only" density as the collapsed sidebar. */
+.brandFull {
+  display: none;
+  height: 32px;
+  width: auto;
+}
+
+/* Below the sidebar's icon-rail breakpoint, keep the same icon-only mark
+   density the collapsed sidebar already uses. At and above it, show the
+   marketing site's full logo lockup instead of the icon + text wordmark. */
 @media (max-width: 1024px) {
   .brandWordmark {
     display: none;
+  }
+}
+
+@media (min-width: 1025px) {
+  .brandMark,
+  .brandWordmark {
+    display: none;
+  }
+
+  .brandFull {
+    display: block;
   }
 }
 

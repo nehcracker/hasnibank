@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import ClientIdBadge from '@/components/dashboard/ClientIdBadge'
 import NotificationsBell from '@/components/dashboard/NotificationsBell'
 import LogoMark from '@/components/icons/LogoMark'
+import logoSrc from '@/assets/Logo.png'
 import styles from './Topbar.module.css'
 
 function HamburgerIcon() {
@@ -86,6 +87,7 @@ export default function Topbar({ onMenuToggle }) {
           <span className={styles.brandHasni}>HASNI</span>
           <span className={styles.brandBank}>BANK</span>
         </span>
+        <img src={logoSrc} alt="Hasni Bank" className={styles.brandFull} />
       </Link>
 
       {/* Centre: Client ID badge */}
