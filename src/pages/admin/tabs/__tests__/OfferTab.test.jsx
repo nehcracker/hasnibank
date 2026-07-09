@@ -1,4 +1,5 @@
-import { formFromTerms, termsFromForm } from '../OfferTab'
+import { render, screen, fireEvent } from '@testing-library/react'
+import OfferTab, { formFromTerms, termsFromForm } from '../OfferTab'
 
 const APPLICATION = { amount_sought: 250000, currency: 'USD' }
 
@@ -64,4 +65,27 @@ test('termsFromForm writes default charges, prepayment, and disclosure fields', 
 test('termsFromForm zeroes the prepayment penalty when early settlement is not permitted', () => {
   const terms = termsFromForm(baseForm({ prepaymentAllowed: false }))
   expect(terms.prepayment).toEqual({ allowed: false, penalty_pct_of_remaining_principal: 0 })
+})
+
+const OFFER_TAB_APPLICATION = { id: 'app-1', amount_sought: 250000, currency: 'USD' }
+
+test('renders default charges, prepayment, and disclosure fields', () => {
+  render(
+    <OfferTab application={OFFER_TAB_APPLICATION} offers={[]} user={{ id: 'staff-1' }} onChanged={vi.fn()} />
+  )
+  expect(screen.getByText('Late fee')).toBeInTheDocument()
+  expect(screen.getByText(/penalty rate/i)).toBeInTheDocument()
+  expect(screen.getByText(/grace days before charges apply/i)).toBeInTheDocument()
+  expect(screen.getByText('Early settlement permitted')).toBeInTheDocument()
+  expect(screen.getByText('Security and collateral')).toBeInTheDocument()
+  expect(screen.getByText('Insurance requirements')).toBeInTheDocument()
+})
+
+test('prepayment penalty input is hidden once early settlement is switched off', () => {
+  render(
+    <OfferTab application={OFFER_TAB_APPLICATION} offers={[]} user={{ id: 'staff-1' }} onChanged={vi.fn()} />
+  )
+  expect(screen.getByText(/prepayment penalty % of remaining principal/i)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('checkbox', { name: /early settlement permitted/i }))
+  expect(screen.queryByText(/prepayment penalty % of remaining principal/i)).not.toBeInTheDocument()
 })

@@ -416,6 +416,93 @@ export default function OfferTab({ application, offers, user, onChanged }) {
           />
         </div>
 
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <div>
+            <div className={styles.fieldLabelSm}>Late fee</div>
+            <select className={styles.stageSelect} value={form.lateFeeType} onChange={set('lateFeeType')}>
+              <option value="flat">Flat amount</option>
+              <option value="percent_of_instalment">Percent of instalment</option>
+            </select>
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>
+              {form.lateFeeType === 'flat' ? 'Late fee amount' : 'Late fee %'}
+            </div>
+            <input
+              type="number"
+              step="0.1"
+              className={styles.stageSelect}
+              value={form.lateFeeValue}
+              onChange={set('lateFeeValue')}
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Penalty rate % (per annum, on overdue balance)</div>
+            <input
+              type="number"
+              step="0.1"
+              className={styles.stageSelect}
+              value={form.penaltyRatePct}
+              onChange={set('penaltyRatePct')}
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Grace days before charges apply</div>
+            <input
+              type="number"
+              min="0"
+              className={styles.stageSelect}
+              value={form.graceDays}
+              onChange={set('graceDays')}
+            />
+          </div>
+        </div>
+
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <label className={styles.toggleRow}>
+            <input
+              type="checkbox"
+              checked={form.prepaymentAllowed}
+              onChange={(e) => setForm((prev) => ({ ...prev, prepaymentAllowed: e.target.checked }))}
+            />
+            Early settlement permitted
+          </label>
+          {form.prepaymentAllowed && (
+            <div>
+              <div className={styles.fieldLabelSm}>Prepayment penalty % of remaining principal</div>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                className={styles.stageSelect}
+                value={form.prepaymentPenaltyPct}
+                onChange={set('prepaymentPenaltyPct')}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className={styles.formRow} style={{ marginTop: 'var(--space-4)' }}>
+          <div>
+            <div className={styles.fieldLabelSm}>Security and collateral</div>
+            <textarea
+              className={styles.noteField}
+              value={form.securityDescription}
+              onChange={set('securityDescription')}
+              placeholder="e.g. General security agreement over business assets"
+            />
+          </div>
+          <div>
+            <div className={styles.fieldLabelSm}>Insurance requirements</div>
+            <textarea
+              className={styles.noteField}
+              value={form.insuranceRequirements}
+              onChange={set('insuranceRequirements')}
+              placeholder="e.g. Comprehensive trade credit insurance naming Hasni Bank as loss payee"
+            />
+          </div>
+        </div>
+
         {preview && (
           <div className={styles.offerPreview}>
             <span>Periodic payment: <strong>{money(preview.payment, form.currency)}</strong></span>
