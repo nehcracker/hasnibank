@@ -109,6 +109,19 @@ test('shows a mismatch message when confirm email diverges from email', () => {
   expect(screen.getByText('Emails do not match')).toBeInTheDocument()
 })
 
+test('does not show an email mismatch when confirm email only differs by case', () => {
+  render(<ApplicationForm application={makeApp()} profile={{}} />)
+
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'founder@acme.test' },
+  })
+  fireEvent.change(screen.getByLabelText('Confirm email'), {
+    target: { value: 'FOUNDER@ACME.TEST' },
+  })
+
+  expect(screen.queryByText('Emails do not match')).not.toBeInTheDocument()
+})
+
 test('clears the email mismatch message once the values match', () => {
   render(<ApplicationForm application={makeApp()} profile={{}} />)
 

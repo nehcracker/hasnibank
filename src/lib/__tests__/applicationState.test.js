@@ -181,6 +181,22 @@ describe('canSubmit — SME', () => {
       canSubmit(app({ fields: { ...FULL_SME_FIELDS, phone: '', confirmPhone: '' } }))
     ).toBe(true)
   })
+
+  test('true when confirmEmail differs from email only by case', () => {
+    expect(
+      canSubmit(app({ fields: { ...FULL_SME_FIELDS, confirmEmail: 'FOUNDER@ACME.TEST' } }))
+    ).toBe(true)
+  })
+
+  test('true when confirmPhone differs from phone only by trailing whitespace', () => {
+    expect(
+      canSubmit(
+        app({
+          fields: { ...FULL_SME_FIELDS, phone: '+254700000000', confirmPhone: '+254700000000 ' },
+        })
+      )
+    ).toBe(true)
+  })
 })
 
 // ── canSubmit — non-SME tracks keep the business-profile gate, self-check optional ─

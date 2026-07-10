@@ -84,8 +84,8 @@ export function canSubmit(app) {
   if (app?.track === 'sme') {
     const fields = app?.fields ?? {}
     const requiredOk = REQUIRED_FIELDS_SME.every((key) => filled(fields[key]))
-    const emailMatches = fields.confirmEmail === fields.email
-    const phoneMatches = !filled(fields.phone) || fields.confirmPhone === fields.phone
+    const emailMatches = String(fields.confirmEmail ?? '').trim().toLowerCase() === String(fields.email ?? '').trim().toLowerCase()
+    const phoneMatches = !filled(fields.phone) || String(fields.confirmPhone ?? '').trim() === String(fields.phone ?? '').trim()
     return requiredOk && emailMatches && phoneMatches
   }
   return profileCompletion(app?.business_profile, app?.required_sections) === 100

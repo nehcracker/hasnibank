@@ -192,7 +192,7 @@ export default function ApplicationForm({ application, profile, onSaved, onClose
             value={fields.confirmEmail}
             onChange={(e) => set('confirmEmail', e.target.value)}
           />
-          {fields.confirmEmail && fields.confirmEmail !== fields.email && (
+          {fields.confirmEmail && fields.confirmEmail.trim().toLowerCase() !== fields.email.trim().toLowerCase() && (
             <p className={styles.fieldError}>Emails do not match</p>
           )}
         </Field>
@@ -213,7 +213,7 @@ export default function ApplicationForm({ application, profile, onSaved, onClose
             value={fields.confirmPhone}
             onChange={(e) => set('confirmPhone', e.target.value)}
           />
-          {fields.phone && fields.confirmPhone && fields.confirmPhone !== fields.phone && (
+          {fields.phone && fields.confirmPhone && fields.confirmPhone.trim() !== fields.phone.trim() && (
             <p className={styles.fieldError}>Phone numbers do not match</p>
           )}
         </Field>
